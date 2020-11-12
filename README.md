@@ -1,0 +1,3 @@
+﻿# Well Matching
+---
+Wtyczka QGIS umożliwiająca wyszukanie tożsamych otworów geologicznych w obrębie dwóch odrębnych baz danych. Identyfikacja otworów następuje po nazwie, współrzędnych XYZ oraz dodatkowych atrybutach, np.: głębokość otworu, rok zakończenia wiercenia itp. Dzięki zastosowanym algorytmom dopasowywania (m.in. fuzzy matching) wartości tych samych atrybutów w obu bazach mogą się różnić – wtyczka zaproponuje najbardziej prawdopodobne dopasowania.
