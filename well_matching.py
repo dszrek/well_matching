@@ -29,7 +29,7 @@ from .resources import *
 
 
 # Import the code for the DockWidget
-from .well_matching_dockwidget import WellMatchingDockWidget
+from .well_matching_dockwidget import WellMatchingDockWidget, ImportDataDialog
 from .main import dlg_main
 import os.path
 
@@ -74,6 +74,7 @@ class WellMatching:
 
         self.pluginIsActive = False
         self.dockwidget = None
+        # self.imp_dlg = None
 
 
     # noinspection PyMethodMayBeStatic
@@ -224,6 +225,7 @@ class WellMatching:
             if self.dockwidget == None:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = WellMatchingDockWidget()
+                self.dockwidget.imp_dlg = ImportDataDialog()
 
             dlg_main(self.dockwidget)  # Przekazanie referencji interfejsu wtyczki do main.py
 

@@ -12,12 +12,16 @@ def dlg_main(_dlg):
     dlg = _dlg
 
 def new_project():
-    """Utworzenie nowego projektu."""
+    """Utworzenie nowego projektu. Uruchamia się po naciśnięciu btn_new_prj."""
     path = file_dialog(is_folder=True)
     if os.path.isdir(path):
         dlg.l_path_content.setText(path)
         dlg.btn_adf.setEnabled(True)
         dlg.btn_bdf.setEnabled(True)
+
+def import_adf():
+    """Import .csv z danymi bazy A. Uruchamia się po naciśnięciu btn_adf."""
+    dlg.imp_dlg.show()
 
 def file_dialog(dir='', for_open=True, fmt='', is_folder=False):
     """Dialog z eksploratorem Windows. Otwieranie/tworzenie folderów i plików."""
