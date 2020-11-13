@@ -3,3 +3,4 @@ __pycache__/
 .vscode/
 pyqgis.cmd
 pylintrc
+bin.py
