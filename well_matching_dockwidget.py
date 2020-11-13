@@ -27,16 +27,17 @@ import os
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal
 
+from .main import new_project
+
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'well_matching_dockwidget_base.ui'))
 
 
-class WellMatchingDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
+class WellMatchingDockWidget(QtWidgets.QDockWidget, FORM_CLASS):  # type: ignore
 
     closingPlugin = pyqtSignal()
 
     def __init__(self, parent=None):
-        """Constructor."""
         super(WellMatchingDockWidget, self).__init__(parent)
         # Set up the user interface from Designer.
         # After setupUI you can access any designer object by doing
@@ -44,6 +45,11 @@ class WellMatchingDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+        self.widgets_conn()
+
+    def widgets_conn(self):
+        """Przyłączenie widget'ów do funkcji."""
+        self.btn_new_prj.pressed.connect(new_project)
 
     def closeEvent(self, event):
         self.closingPlugin.emit()
