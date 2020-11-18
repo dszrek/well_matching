@@ -35,7 +35,7 @@ def import_adf():
         return
     if len(a_csv) == 0:
         return
-    adf = ADataFrame(a_csv)
+    adf = ADataFrame(a_csv, dlg.imp_dlg)
     dlg.imp_dlg.tv_df.setModel(adf)
     df_table_format(dlg.imp_dlg.tv_df)
     dlg.imp_dlg.show()
@@ -75,6 +75,9 @@ def show_idnu():
 
 def show_xynv():
     adf.show_xynv()
+
+def show_valid():
+    adf.show_valid()
 
 def file_dialog(dir='', for_open=True, fmt='', is_folder=False):
     """Dialog z eksploratorem Windows. Otwieranie/tworzenie folderów i plików."""

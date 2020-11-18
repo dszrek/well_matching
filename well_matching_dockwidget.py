@@ -27,7 +27,7 @@ import os
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal
 
-from .main import new_project, import_adf, show_all, show_idna, show_idnu, show_xynv
+from .main import new_project, import_adf, show_all, show_idna, show_idnu, show_xynv, show_valid
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'well_matching_dockwidget_base.ui'))
@@ -73,3 +73,4 @@ class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS1):  # type: ignore
         self.btn_flt_idna.pressed.connect(show_idna)
         self.btn_flt_idnu.pressed.connect(show_idnu)
         self.btn_flt_xynv.pressed.connect(show_xynv)
+        self.btn_flt_valid.pressed.connect(show_valid)

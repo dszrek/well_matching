@@ -81,18 +81,70 @@ class DataFrameModel(QAbstractTableModel):
 
 class ADataFrame(DataFrameModel):
     """Subklasa DataFrameModel obsługująca dane ze zbioru A."""
-    def __init__(self, df):
+    def __init__(self, df, dlg):
         super().__init__(df)
+        self.dlg = dlg
         # Wszystkie rekordy:
-        self.all = df
+        self.all = df  # Dataframe
+        self.all_cnt = len(self.all)  # Suma rekordów
         # Rekordy z pustym id:
-        self.idna = df[df['ID'].isna()].reset_index(drop=True).copy()
-        # Rekordy z niunikalnymi id:
-        self.idnu = df[df['ID'].duplicated(keep=False)].reset_index(drop=True).copy()
+        self.idna = df[df['ID'].isna()]
+        self.idna_cnt = int()
+        # Rekordy z nieunikalnymi id:
+        self.idnu = df[df['ID'].duplicated(keep=False)]
+        self.idnu_cnt = int()
         # Rekordy z błędną lokalizacją:
-        bad_x = df['X'].isna() | (df['X'] < 170000.0) | (df['X'] > 870000.0)
-        bad_y = df['Y'].isna() | (df['Y'] < 140000.0) | (df['Y'] > 890000.0)
-        self.xynv = df[ bad_x | bad_y].reset_index(drop=True).copy()
+        self.xynv = None
+        self.xynv_cnt = int()
+        # Prawidłowe rekordy:
+        self.valid = None
+        self.valid_cnt = int()
+        self.init_validation()
+
+    def init_validation(self):
+        """Wykrycie błędów związanych z id i współrzędnymi otworów. Selekcja prawidłowych rekordów."""
+        idx_nv = pd.DataFrame(columns=['idx'])  # Pusty dataframe do wrzucania indeksów błędnych rekordów
+        idx_nv = idx_nv.append(pd.DataFrame(self.idna.rename_axis('idx').reset_index()['idx']), ignore_index=True)
+        self.idna = self.idna.reset_index(drop=True)
+        self.idna_cnt = len(self.idna)
+        idx_nv = idx_nv.append(pd.DataFrame(self.idnu.rename_axis('idx').reset_index()['idx']), ignore_index=True)
+        self.idnu = self.idnu.reset_index(drop=True)
+        self.idnu_cnt = len(self.idnu)
+        bad_x = self.all['X'].isna() | (self.all['X'] < 170000.0) | (self.all['X'] > 870000.0)
+        bad_y = self.all['Y'].isna() | (self.all['Y'] < 140000.0) | (self.all['Y'] > 890000.0)
+        self.xynv = self.all[ bad_x | bad_y]
+        idx_nv = idx_nv.append(pd.DataFrame(self.xynv.rename_axis('idx').reset_index()['idx']), ignore_index=True)
+        self.xynv = self.xynv.reset_index(drop=True)
+        self.xynv_cnt = len(self.xynv)
+        idx_nv.drop_duplicates(keep='first', inplace=True, ignore_index=True)
+        self.valid = self.all[~self.all.reset_index().index.isin(idx_nv['idx'])]
+        self.valid = self.valid.reset_index(drop=True)
+        self.valid_cnt = len(self.valid)
+
+    def __setattr__(self, attr, val):
+        """Przechwycenie zmiany atrybutu."""
+        if attr == "all_cnt":
+            b_txt = f"Wszystkie \n \n ({val})"
+            self.btn_update(self.dlg.btn_flt_all, b_txt, val)
+        if attr == "idna_cnt":
+            b_txt = f"Brak ID \n \n ({val})"
+            self.btn_update(self.dlg.btn_flt_idna, b_txt, val)
+        if attr == "idnu_cnt":
+            b_txt = f"Nieunikalne ID \n \n ({val})"
+            self.btn_update(self.dlg.btn_flt_idnu, b_txt, val)
+        if attr == "xynv_cnt":
+            b_txt = f"Błędna lokalizacja \n \n ({val})"
+            self.btn_update(self.dlg.btn_flt_xynv, b_txt, val)
+        if attr == "valid_cnt":
+            b_txt = f"Poprawne \n \n ({val})"
+            self.btn_update(self.dlg.btn_flt_valid, b_txt, val)
+        super().__setattr__(attr, val)
+
+    def btn_update(self, btn, txt, val):
+        """Aktualizacja ustawień przycisku filtrującego."""
+        is_enabled = True if val > 0 else False
+        btn.setText(txt)
+        btn.setEnabled(is_enabled)
 
     def show_all(self):
         """Wyświetlenie w tableview wszystkich rekordów z dataframe'a."""
@@ -109,3 +161,7 @@ class ADataFrame(DataFrameModel):
     def show_xynv(self):
         """Wyświetlenie w tableview rekordów z pustym X i/lub Y."""
         self.setDataFrame(self.xynv)
+
+    def show_valid(self):
+        """Wyświetlenie w tableview poprawnych rekordów."""
+        self.setDataFrame(self.valid)
