@@ -101,9 +101,9 @@ class ADataFrame(DataFrameModel):
         self.valid = None
         self.valid_cnt = int()
 
-        self.tv_format()
-        self.init_validation()
-        self.show_all()
+        self.tv_format()  # Formatowanie kolumn tableview
+        self.init_validation()  # Walidacja rekordów
+        self.btn_mgr(dlg.btn_flt_all, False)  # Pokazanie wszystkich rekordów
 
     def __setattr__(self, attr, val):
         """Przechwycenie zmiany atrybutu."""
@@ -130,25 +130,20 @@ class ADataFrame(DataFrameModel):
         btn.setText(txt)
         btn.setEnabled(is_enabled)
 
-    def show_all(self):
-        """Wyświetlenie w tableview wszystkich rekordów z dataframe'a."""
-        self.setDataFrame(self.all)
-
-    def show_idna(self):
-        """Wyświetlenie w tableview rekordów z pustym id."""
-        self.setDataFrame(self.idna)
-
-    def show_idnu(self):
-        """Wyświetlenie w tableview rekordów z nieunikalnymi id."""
-        self.setDataFrame(self.idnu)
-
-    def show_xynv(self):
-        """Wyświetlenie w tableview rekordów z pustym X i/lub Y."""
-        self.setDataFrame(self.xynv)
-
-    def show_valid(self):
-        """Wyświetlenie w tableview poprawnych rekordów."""
-        self.setDataFrame(self.valid)
+    def btn_mgr(self, _btn, is_clicked):
+        """Zarządzanie przyciskami filtrującymi."""
+        btns = {self.dlg.btn_flt_all : self.all,
+                self.dlg.btn_flt_idna : self.idna,
+                self.dlg.btn_flt_idnu : self.idnu,
+                self.dlg.btn_flt_xynv : self.xynv,
+                self.dlg.btn_flt_valid : self.valid}
+        for btn, df in btns.items():
+            if btn == _btn:
+                if not is_clicked:
+                    btn.setChecked(True)
+                self.setDataFrame(df)
+            else:
+                btn.setChecked(False)
 
     def tv_format(self):
         """Formatowanie kolumn tableview'u."""
