@@ -9,9 +9,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>882</width>
-    <height>557</height>
+    <width>1126</width>
+    <height>709</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Import danych z bazy A</string>
@@ -22,11 +28,432 @@
   <property name="modal">
    <bool>true</bool>
   </property>
-  <layout class="QGridLayout" name="gridLayout_2">
-   <item row="0" column="0">
-    <layout class="QGridLayout" name="gridLayout"/>
+  <layout class="QVBoxLayout" name="verticalLayout_10">
+   <item>
+    <widget class="QSplitter" name="splitter_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <widget class="QGroupBox" name="gb_flts">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>1</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>0</height>
+       </size>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QPushButton" name="btn_flt_all">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+border-radius: 4px;
+border: 1px solid rgb(1,87,155);
+padding: 12px;
+color: black;
+font-size: 12px;
+font-weight: normal
+}
+
+QPushButton:pressed {
+background-color: rgb(2,136,209)
+}
+
+QPushButton:enabled {
+background-color: rgb(3,169,244)
+}
+
+QPushButton:disabled {
+color: white;
+background-color: rgb(179,229,252);
+border: 1px solid white
+}
+
+QPushButton:hover {
+background-color: rgb(79,195,247)
+}
+
+QPushButton:checked {
+background-color: rgb(2,136,209);
+color: white;
+border: 2px solid white
+}</string>
+         </property>
+         <property name="text">
+          <string>Wszystkie</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_flt_idna">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="autoFillBackground">
+          <bool>false</bool>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+border-radius: 4px;
+border: 1px solid rgb(183,28,28);
+padding: 12px;
+color: black;
+font-size: 12px;
+font-weight: normal
+}
+
+QPushButton:pressed {
+background-color: rgb(211,47,47)
+}
+
+QPushButton:enabled {
+background-color: rgb(244,67,54)
+}
+
+QPushButton:disabled {
+color: white;
+background-color: rgb(255,205,210);
+border: 1px solid white
+}
+
+QPushButton:hover {
+background-color: rgb(229,115,115)
+}
+
+QPushButton:checked {
+background-color: rgb(211,47,47);
+color: white;
+border: 2px solid white
+}</string>
+         </property>
+         <property name="text">
+          <string>Brak ID</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_flt_idnu">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+border-radius: 4px;
+border: 1px solid rgb(183,28,28);
+padding: 12px;
+color: black;
+font-size: 12px;
+font-weight: normal
+}
+
+QPushButton:pressed {
+background-color: rgb(211,47,47)
+}
+
+QPushButton:enabled {
+background-color: rgb(244,67,54)
+}
+
+QPushButton:disabled {
+color: white;
+background-color: rgb(255,205,210);
+border: 1px solid white
+}
+
+QPushButton:hover {
+background-color: rgb(229,115,115)
+}
+
+QPushButton:checked {
+background-color: rgb(211,47,47);
+color: white;
+border: 2px solid white
+}</string>
+         </property>
+         <property name="text">
+          <string>Nieunikalne ID</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_flt_xynv">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+border-radius: 4px;
+border: 1px solid rgb(183,28,28);
+padding: 12px;
+color: black;
+font-size: 12px;
+font-weight: normal
+}
+
+QPushButton:pressed {
+background-color: rgb(211,47,47)
+}
+
+QPushButton:enabled {
+background-color: rgb(244,67,54)
+}
+
+QPushButton:disabled {
+color: white;
+background-color: rgb(255,205,210);
+border: 1px solid white
+}
+
+QPushButton:hover {
+background-color: rgb(229,115,115)
+}
+
+QPushButton:checked {
+background-color: rgb(211,47,47);
+color: white;
+border: 2px solid white
+}</string>
+         </property>
+         <property name="text">
+          <string>Błędna lokalizacja</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line_2">
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_flt_valid">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton {
+border-radius: 4px;
+border: 1px solid rgb(27,94,32);
+padding: 12px;
+color: black;
+font-size: 12px;
+font-weight: normal
+}
+
+QPushButton:pressed {
+background-color: rgb(56,142,60)
+}
+
+QPushButton:enabled {
+background-color: rgb(76,175,80)
+}
+
+QPushButton:disabled {
+color: white;
+background-color: rgb(200,230,201);
+border: 1px solid white
+}
+
+QPushButton:hover {
+background-color: rgb(129,199,132)
+}
+
+QPushButton:checked {
+background-color: rgb(56,142,60);
+color: white;
+border: 2px solid white
+}</string>
+         </property>
+         <property name="text">
+          <string>Poprawne</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QGroupBox" name="gb_df">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>200</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>TextLabel</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTableView" name="tv_df">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>10</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QGroupBox" name="gb_z">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>1</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="font">
+          <font>
+           <pointsize>14</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Z</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSplitter" name="splitter">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="opaqueResize">
+          <bool>true</bool>
+         </property>
+         <property name="handleWidth">
+          <number>5</number>
+         </property>
+         <property name="childrenCollapsible">
+          <bool>false</bool>
+         </property>
+         <widget class="QFrame" name="">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>4</verstretch>
+           </sizepolicy>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QTableView" name="tableView_3"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="pushButton_5">
+             <property name="text">
+              <string>PushButton</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QFrame" name="">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>1</verstretch>
+           </sizepolicy>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <widget class="QPushButton" name="pushButton_6">
+             <property name="text">
+              <string>PushButton</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTableView" name="tableView_4"/>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
    </item>
-   <item row="1" column="0">
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
