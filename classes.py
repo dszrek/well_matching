@@ -83,7 +83,8 @@ class ADataFrame(DataFrameModel):
     """Subklasa DataFrameModel obsługująca dane ze zbioru A."""
     def __init__(self, df, dlg):
         super().__init__(df)
-        self.dlg = dlg
+        self.dlg = dlg  # Referencja do ui
+        self.tv = dlg.tv_df  # Referencja do tableview
         # Wszystkie rekordy:
         self.all = df  # Dataframe
         self.all_cnt = len(self.all)  # Suma rekordów
@@ -99,27 +100,10 @@ class ADataFrame(DataFrameModel):
         # Prawidłowe rekordy:
         self.valid = None
         self.valid_cnt = int()
-        self.init_validation()
 
-    def init_validation(self):
-        """Wykrycie błędów związanych z id i współrzędnymi otworów. Selekcja prawidłowych rekordów."""
-        idx_nv = pd.DataFrame(columns=['idx'])  # Pusty dataframe do wrzucania indeksów błędnych rekordów
-        idx_nv = idx_nv.append(pd.DataFrame(self.idna.rename_axis('idx').reset_index()['idx']), ignore_index=True)
-        self.idna = self.idna.reset_index(drop=True)
-        self.idna_cnt = len(self.idna)
-        idx_nv = idx_nv.append(pd.DataFrame(self.idnu.rename_axis('idx').reset_index()['idx']), ignore_index=True)
-        self.idnu = self.idnu.reset_index(drop=True)
-        self.idnu_cnt = len(self.idnu)
-        bad_x = self.all['X'].isna() | (self.all['X'] < 170000.0) | (self.all['X'] > 870000.0)
-        bad_y = self.all['Y'].isna() | (self.all['Y'] < 140000.0) | (self.all['Y'] > 890000.0)
-        self.xynv = self.all[ bad_x | bad_y]
-        idx_nv = idx_nv.append(pd.DataFrame(self.xynv.rename_axis('idx').reset_index()['idx']), ignore_index=True)
-        self.xynv = self.xynv.reset_index(drop=True)
-        self.xynv_cnt = len(self.xynv)
-        idx_nv.drop_duplicates(keep='first', inplace=True, ignore_index=True)
-        self.valid = self.all[~self.all.reset_index().index.isin(idx_nv['idx'])]
-        self.valid = self.valid.reset_index(drop=True)
-        self.valid_cnt = len(self.valid)
+        self.tv_format()
+        self.init_validation()
+        self.show_all()
 
     def __setattr__(self, attr, val):
         """Przechwycenie zmiany atrybutu."""
@@ -165,3 +149,36 @@ class ADataFrame(DataFrameModel):
     def show_valid(self):
         """Wyświetlenie w tableview poprawnych rekordów."""
         self.setDataFrame(self.valid)
+
+    def tv_format(self):
+        """Formatowanie kolumn tableview'u."""
+        self.tv.setColumnWidth(0, 100)
+        self.tv.setColumnWidth(1, 270)
+        self.tv.setColumnWidth(2, 60)
+        self.tv.setColumnWidth(3, 60)
+        self.tv.setColumnWidth(4, 50)
+        self.tv.setColumnWidth(5, 50)
+        self.tv.setColumnWidth(6, 50)
+        self.tv.setColumnWidth(7, 50)
+        self.tv.setColumnWidth(8, 50)
+        self.tv.horizontalHeader().setMinimumSectionSize(1)
+
+    def init_validation(self):
+        """Wykrycie błędów związanych z id i współrzędnymi otworów. Selekcja prawidłowych rekordów."""
+        idx_nv = pd.DataFrame(columns=['idx'])  # Pusty dataframe do wrzucania indeksów błędnych rekordów
+        idx_nv = idx_nv.append(pd.DataFrame(self.idna.rename_axis('idx').reset_index()['idx']), ignore_index=True)
+        self.idna = self.idna.reset_index(drop=True)
+        self.idna_cnt = len(self.idna)
+        idx_nv = idx_nv.append(pd.DataFrame(self.idnu.rename_axis('idx').reset_index()['idx']), ignore_index=True)
+        self.idnu = self.idnu.reset_index(drop=True)
+        self.idnu_cnt = len(self.idnu)
+        bad_x = self.all['X'].isna() | (self.all['X'] < 170000.0) | (self.all['X'] > 870000.0)
+        bad_y = self.all['Y'].isna() | (self.all['Y'] < 140000.0) | (self.all['Y'] > 890000.0)
+        self.xynv = self.all[ bad_x | bad_y]
+        idx_nv = idx_nv.append(pd.DataFrame(self.xynv.rename_axis('idx').reset_index()['idx']), ignore_index=True)
+        self.xynv = self.xynv.reset_index(drop=True)
+        self.xynv_cnt = len(self.xynv)
+        idx_nv.drop_duplicates(keep='first', inplace=True, ignore_index=True)
+        self.valid = self.all[~self.all.reset_index().index.isin(idx_nv['idx'])]
+        self.valid = self.valid.reset_index(drop=True)
+        self.valid_cnt = len(self.valid)

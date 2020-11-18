@@ -37,7 +37,6 @@ def import_adf():
         return
     adf = ADataFrame(a_csv, dlg.imp_dlg)
     dlg.imp_dlg.tv_df.setModel(adf)
-    df_table_format(dlg.imp_dlg.tv_df)
     dlg.imp_dlg.show()
 
 def load_csv():
@@ -50,19 +49,6 @@ def load_csv():
         return
     df.columns = ['ID', 'NAZWA', 'X', 'Y', 'Z', 'H', 'ROK', 'SKAN', 'TRANS']
     return df
-
-def df_table_format(tv):
-    """Formatowanie kolumn tableview'u."""
-    tv.setColumnWidth(0, 100)
-    tv.setColumnWidth(1, 270)
-    tv.setColumnWidth(2, 60)
-    tv.setColumnWidth(3, 60)
-    tv.setColumnWidth(4, 50)
-    tv.setColumnWidth(5, 50)
-    tv.setColumnWidth(6, 50)
-    tv.setColumnWidth(7, 50)
-    tv.setColumnWidth(8, 50)
-    tv.horizontalHeader().setMinimumSectionSize(1)
 
 def show_all():
     adf.show_all()
