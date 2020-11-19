@@ -52,8 +52,8 @@ class DataFrameModel(QAbstractTableModel):
         try:
             val = self._dataframe.iloc[row][col]
         except:
-            print(self._dataframe)
-            print(f"self._dataframe.shape, row: {row}, col: {col}")
+            # print(self._dataframe)
+            # print(f"self._dataframe.shape, row: {row}, col: {col}")
             return QVariant()
         if role == Qt.DisplayRole:
             # Get the raw value
@@ -179,3 +179,37 @@ class ADataFrame(DataFrameModel):
         self.valid = self.all[~self.all.reset_index().index.isin(idx_nv['idx'])]
         self.valid = self.valid.reset_index(drop=True)
         self.valid_cnt = len(self.valid)
+
+        # print(self.valid['Z'].dtypes)
+        # self.valid['Z'] = pd.to_numeric(self.valid['Z'], errors='coerce')
+        # self.valid['Z'].astype(float).applymap('{:,.2f}'.format))
+        z_vals = pd.DataFrame(self.valid['Z'].value_counts())
+        z_vals.reset_index(inplace=True)
+        z_vals = z_vals.rename(columns = {'index' : 'Z', 'Z' : 'LICZNIK'})
+        z_vals = z_vals.sort_values(by='Z').reset_index(drop=True)
+        idf = IdxDataFrame(z_vals, self.dlg)
+
+
+class IdxDataFrame(DataFrameModel):
+    """Subklasa DataFrameModel obsługująca dane ze zbioru A."""
+    def __init__(self, df, dlg):
+        super().__init__(df)
+        self.dlg = dlg  # Referencja do ui
+        self.tv = dlg.tv_z  # Referencja do tableview
+        self.tv.setModel(self)
+        self.tv_format()  # Formatowanie kolumn tableview
+        self.sel_tv = self.tv.selectionModel()
+        self.sel_tv.selectionChanged.connect(self.show_index_records)
+
+    def tv_format(self):
+        """Formatowanie kolumn tableview'u."""
+        self.tv.setColumnWidth(0, 50)
+        self.tv.setColumnWidth(1, 50)
+        self.tv.horizontalHeader().setMinimumSectionSize(1)
+
+    def show_index_records(self):
+        index = self.sel_tv.currentIndex()
+        value = index.sibling(index.row(), 0).data()
+        df = self.dlg.adf.valid
+        df = df[df['Z'] == value].reset_index(drop=True)
+        self.dlg.adf.setDataFrame(df)
