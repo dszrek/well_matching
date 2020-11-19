@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import pandas as pd
 
-from qgis.PyQt.QtCore import Qt, QAbstractTableModel, pyqtProperty, pyqtSlot, QVariant, QModelIndex
+from qgis.PyQt.QtCore import Qt, QAbstractTableModel, pyqtSignal, pyqtProperty, pyqtSlot, QVariant, QModelIndex
 
 
 class DataFrameModel(QAbstractTableModel):
@@ -81,6 +81,9 @@ class DataFrameModel(QAbstractTableModel):
 
 class ADataFrame(DataFrameModel):
     """Subklasa DataFrameModel obsługująca dane ze zbioru A."""
+
+    flt_changed = pyqtSignal(str)
+
     def __init__(self, df, dlg):
         super().__init__(df)
         self.dlg = dlg  # Referencja do ui
@@ -104,11 +107,14 @@ class ADataFrame(DataFrameModel):
         self.valid_cnt = int()
 
         self.init_validation()  # Walidacja rekordów
-        self.btn_mgr(dlg.btn_flt_all, False)  # Pokazanie wszystkich rekordów
+        self.flt_changed.connect(self.flt_change)
+        self.flt = "valid"  # Nazwa aktualnego filtru
 
 
     def __setattr__(self, attr, val):
         """Przechwycenie zmiany atrybutu."""
+        if attr == "flt":
+            self.flt_changed.emit(val)
         if attr == "all_cnt":
             b_txt = f"Wszystkie \n \n ({val})"
             self.btn_update(self.dlg.btn_flt_all, b_txt, val)
@@ -126,14 +132,21 @@ class ADataFrame(DataFrameModel):
             self.btn_update(self.dlg.btn_flt_valid, b_txt, val)
         super().__setattr__(attr, val)
 
-    def btn_update(self, btn, txt, val):
-        """Aktualizacja ustawień przycisku filtrującego."""
-        is_enabled = True if val > 0 else False
-        btn.setText(txt)
-        btn.setEnabled(is_enabled)
+    def set_flt(self, _flt):
+        """Ustawienie nazwy filtru rekordów."""
+        self.flt = _flt
 
-    def btn_mgr(self, _btn, is_clicked):
-        """Zarządzanie przyciskami filtrującymi."""
+    def flt_change(self, val):
+        """Zmiana fitru danych."""
+        btns = {'all' : self.dlg.btn_flt_all,
+                'idna' : self.dlg.btn_flt_idna,
+                'idnu' : self.dlg.btn_flt_idnu,
+                'xynv' : self.dlg.btn_flt_xynv,
+                'valid' : self.dlg.btn_flt_valid}
+        self.btns_update(btns[val])
+
+    def btns_update(self, _btn):
+        """Aktualizacja stanu przycisków filtrujących."""
         btns = {self.dlg.btn_flt_all : self.all,
                 self.dlg.btn_flt_idna : self.idna,
                 self.dlg.btn_flt_idnu : self.idnu,
@@ -141,11 +154,16 @@ class ADataFrame(DataFrameModel):
                 self.dlg.btn_flt_valid : self.valid}
         for btn, df in btns.items():
             if btn == _btn:
-                if not is_clicked:
-                    btn.setChecked(True)
+                btn.setChecked(True)
                 self.setDataFrame(df)
             else:
                 btn.setChecked(False)
+
+    def btn_update(self, btn, txt, val):
+        """Aktualizacja ustawień przycisku filtrującego."""
+        is_enabled = True if val > 0 else False
+        btn.setText(txt)
+        btn.setEnabled(is_enabled)
 
     def tv_format(self):
         """Formatowanie kolumn tableview'u."""
@@ -208,6 +226,8 @@ class IdxDataFrame(DataFrameModel):
         self.tv.horizontalHeader().setMinimumSectionSize(1)
 
     def show_index_records(self):
+        """Pokazanie w tv_df rekordów z parametrem równym wybranemu indeksowi."""
+        self.dlg.adf.set_flt('valid')  # Przejście do filtru 'valid'
         index = self.sel_tv.currentIndex()
         value = index.sibling(index.row(), 0).data()
         df = self.dlg.adf.valid
