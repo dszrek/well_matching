@@ -85,6 +85,8 @@ class ADataFrame(DataFrameModel):
         super().__init__(df)
         self.dlg = dlg  # Referencja do ui
         self.tv = dlg.tv_df  # Referencja do tableview
+        self.dlg.tv_df.setModel(self)
+        self.tv_format()  # Formatowanie kolumn tableview
         # Wszystkie rekordy:
         self.all = df  # Dataframe
         self.all_cnt = len(self.all)  # Suma rekordów
@@ -101,9 +103,9 @@ class ADataFrame(DataFrameModel):
         self.valid = None
         self.valid_cnt = int()
 
-        self.tv_format()  # Formatowanie kolumn tableview
         self.init_validation()  # Walidacja rekordów
         self.btn_mgr(dlg.btn_flt_all, False)  # Pokazanie wszystkich rekordów
+
 
     def __setattr__(self, attr, val):
         """Przechwycenie zmiany atrybutu."""

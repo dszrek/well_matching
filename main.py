@@ -35,8 +35,8 @@ def import_adf():
         return
     if len(a_csv) == 0:
         return
-    adf = ADataFrame(a_csv, dlg.imp_dlg)
-    dlg.imp_dlg.tv_df.setModel(adf)
+    dlg.imp_dlg.adf = ADataFrame(a_csv, dlg.imp_dlg)
+    # dlg.imp_dlg.tv_df.setModel(adf)
     btn_conn()
     dlg.imp_dlg.show()
 
@@ -53,11 +53,11 @@ def load_csv():
 
 def btn_conn():
     """Podłączenie funkcji do przycisków filtrujących."""
-    dlg.imp_dlg.btn_flt_all.pressed.connect(lambda: adf.btn_mgr(dlg.imp_dlg.btn_flt_all, True))
-    dlg.imp_dlg.btn_flt_idna.pressed.connect(lambda: adf.btn_mgr(dlg.imp_dlg.btn_flt_idna, True))
-    dlg.imp_dlg.btn_flt_idnu.pressed.connect(lambda: adf.btn_mgr(dlg.imp_dlg.btn_flt_idnu, True))
-    dlg.imp_dlg.btn_flt_xynv.pressed.connect(lambda: adf.btn_mgr(dlg.imp_dlg.btn_flt_xynv, True))
-    dlg.imp_dlg.btn_flt_valid.pressed.connect(lambda: adf.btn_mgr(dlg.imp_dlg.btn_flt_valid, True))
+    dlg.imp_dlg.btn_flt_all.pressed.connect(lambda: dlg.imp_dlg.adf.btn_mgr(dlg.imp_dlg.btn_flt_all, True))
+    dlg.imp_dlg.btn_flt_idna.pressed.connect(lambda: dlg.imp_dlg.adf.btn_mgr(dlg.imp_dlg.btn_flt_idna, True))
+    dlg.imp_dlg.btn_flt_idnu.pressed.connect(lambda: dlg.imp_dlg.adf.btn_mgr(dlg.imp_dlg.btn_flt_idnu, True))
+    dlg.imp_dlg.btn_flt_xynv.pressed.connect(lambda: dlg.imp_dlg.adf.btn_mgr(dlg.imp_dlg.btn_flt_xynv, True))
+    dlg.imp_dlg.btn_flt_valid.pressed.connect(lambda: dlg.imp_dlg.adf.btn_mgr(dlg.imp_dlg.btn_flt_valid, True))
 
 def file_dialog(dir='', for_open=True, fmt='', is_folder=False):
     """Dialog z eksploratorem Windows. Otwieranie/tworzenie folderów i plików."""
