@@ -203,33 +203,34 @@ class ADataFrame(DataFrameModel):
         # self.valid['Z'].astype(float).applymap('{:,.2f}'.format))
         z_vals = pd.DataFrame(self.valid['Z'].value_counts())
         z_vals.reset_index(inplace=True)
-        z_vals = z_vals.rename(columns = {'index' : 'Z', 'Z' : 'LICZNIK'})
-        z_vals = z_vals.sort_values(by='Z').reset_index(drop=True)
-        idf = IdxDataFrame(z_vals, self.dlg)
+        z_vals = z_vals.rename(columns = {'index' : 'WARTOŚĆ', 'Z' : 'ILOŚĆ'})
+        z_vals = z_vals.sort_values(by='WARTOŚĆ').reset_index(drop=True)
+        idf = IdxDataFrame(z_vals, 'Z', self.dlg)
 
 
 class IdxDataFrame(DataFrameModel):
     """Subklasa DataFrameModel obsługująca dane ze zbioru A."""
-    def __init__(self, df, dlg):
+    def __init__(self, df, param, dlg):
         super().__init__(df)
+
         self.dlg = dlg  # Referencja do ui
         self.tv = dlg.tv_z  # Referencja do tableview
         self.tv.setModel(self)
         self.tv_format()  # Formatowanie kolumn tableview
         self.sel_tv = self.tv.selectionModel()
-        self.sel_tv.selectionChanged.connect(self.show_index_records)
+        self.sel_tv.selectionChanged.connect(lambda: self.show_index_records('Z'))
 
     def tv_format(self):
         """Formatowanie kolumn tableview'u."""
-        self.tv.setColumnWidth(0, 50)
+        self.tv.setColumnWidth(0, 70)
         self.tv.setColumnWidth(1, 50)
         self.tv.horizontalHeader().setMinimumSectionSize(1)
 
-    def show_index_records(self):
+    def show_index_records(self, param):
         """Pokazanie w tv_df rekordów z parametrem równym wybranemu indeksowi."""
         self.dlg.adf.set_flt('valid')  # Przejście do filtru 'valid'
         index = self.sel_tv.currentIndex()
         value = index.sibling(index.row(), 0).data()
         df = self.dlg.adf.valid
-        df = df[df['Z'] == value].reset_index(drop=True)
+        df = df[df[param] == value].reset_index(drop=True)
         self.dlg.adf.setDataFrame(df)
