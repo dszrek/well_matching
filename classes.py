@@ -137,6 +137,7 @@ class ADataFrame(DataFrameModel):
 
     def __setattr__(self, attr, val):
         """Przechwycenie zmiany atrybutu."""
+        super().__setattr__(attr, val)
         if attr == "flt":
             self.flt_changed.emit(val)
         if attr == "param":
@@ -158,11 +159,14 @@ class ADataFrame(DataFrameModel):
             self.btn_update(self.dlg.btn_flt_valid, b_txt, val)
             b_txt = f"Przetworzone \n \n ({val})"
             self.btn_update(self.dlg.btn_flt_ready, b_txt, val)
-        super().__setattr__(attr, val)
 
     def set_flt(self, _flt):
         """Ustawienie nazwy filtru rekordów."""
         self.flt = _flt
+
+    def set_param(self, _param):
+        """Ustawienie aktywnego parametru."""
+        self.param = _param
 
     def flt_change(self, val):
         """Zmiana fitru danych."""

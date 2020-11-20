@@ -48,16 +48,23 @@ def load_csv():
     except:
         print("Błąd wczytania pliku csv.")
         return
+    # df.columns = ['ID', 'NAZWA', 'X', 'Y', 'Z', 'H', 'ROK']
     df.columns = ['ID', 'NAZWA', 'X', 'Y', 'Z', 'H', 'ROK', 'SKAN', 'TRANS']
     return df
 
 def btn_conn():
     """Podłączenie funkcji do przycisków filtrujących."""
-    dlg.imp_dlg.btn_flt_all.pressed.connect(lambda: dlg.imp_dlg.adf.btn_mgr(dlg.imp_dlg.btn_flt_all, True))
-    dlg.imp_dlg.btn_flt_idna.pressed.connect(lambda: dlg.imp_dlg.adf.btn_mgr(dlg.imp_dlg.btn_flt_idna, True))
-    dlg.imp_dlg.btn_flt_idnu.pressed.connect(lambda: dlg.imp_dlg.adf.btn_mgr(dlg.imp_dlg.btn_flt_idnu, True))
-    dlg.imp_dlg.btn_flt_xynv.pressed.connect(lambda: dlg.imp_dlg.adf.btn_mgr(dlg.imp_dlg.btn_flt_xynv, True))
-    dlg.imp_dlg.btn_flt_valid.pressed.connect(lambda: dlg.imp_dlg.adf.btn_mgr(dlg.imp_dlg.btn_flt_valid, True))
+    dlg.imp_dlg.btn_flt_all.clicked.connect(lambda: dlg.imp_dlg.adf.set_flt('all'))
+    dlg.imp_dlg.btn_flt_idna.clicked.connect(lambda: dlg.imp_dlg.adf.set_flt('idna'))
+    dlg.imp_dlg.btn_flt_idnu.clicked.connect(lambda: dlg.imp_dlg.adf.set_flt('idnu'))
+    dlg.imp_dlg.btn_flt_xynv.clicked.connect(lambda: dlg.imp_dlg.adf.set_flt('xynv'))
+    dlg.imp_dlg.btn_flt_valid.clicked.connect(lambda: dlg.imp_dlg.adf.set_flt('valid'))
+    dlg.imp_dlg.btn_flt_ready.clicked.connect(lambda: dlg.imp_dlg.adf.set_flt('ready'))
+    dlg.imp_dlg.btn_idx_out.pressed.connect(lambda: dlg.imp_dlg.adf.index_move('down'))
+    dlg.imp_dlg.btn_idx_in.pressed.connect(lambda: dlg.imp_dlg.adf.index_move('up'))
+    dlg.imp_dlg.btn_param_z.pressed.connect(lambda: dlg.imp_dlg.adf.set_param('Z'))
+    dlg.imp_dlg.btn_param_h.pressed.connect(lambda: dlg.imp_dlg.adf.set_param('H'))
+    dlg.imp_dlg.btn_param_r.pressed.connect(lambda: dlg.imp_dlg.adf.set_param('ROK'))
 
 def file_dialog(dir='', for_open=True, fmt='', is_folder=False):
     """Dialog z eksploratorem Windows. Otwieranie/tworzenie folderów i plików."""
