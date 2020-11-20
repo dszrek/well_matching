@@ -83,6 +83,7 @@ class ADataFrame(DataFrameModel):
     """Subklasa DataFrameModel obsługująca dane ze zbioru A."""
 
     flt_changed = pyqtSignal(str)
+    param_changed = pyqtSignal(str)
 
     def __init__(self, df, dlg):
         super().__init__(df)
@@ -105,16 +106,39 @@ class ADataFrame(DataFrameModel):
         # Prawidłowe rekordy:
         self.valid = None
         self.valid_cnt = int()
+        # Indeksy:
+        self.df_in = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.df_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.idx_in = IdxDataFrame(self.df_in, self.dlg.tv_idx_in, self.dlg)
+        self.idx_out = IdxDataFrame(self.df_out, self.dlg.tv_idx_out, self.dlg)
+        # Dataframe'y parametrów:
+        self.z_in = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.z_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.h_in = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.h_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.r_in = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.r_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+
+        self.params = [
+            {'param' : 'Z', 'df_in' : self.z_in, 'df_out' : self.z_out},
+            {'param' : 'H', 'df_in' : self.h_in, 'df_out' : self.h_out},
+            {'param' : 'ROK', 'df_in' : self.r_in, 'df_out' : self.r_out}
+            ]
 
         self.init_validation()  # Walidacja rekordów
+        self.param_indexing()  # Indeksacja parametrów
         self.flt_changed.connect(self.flt_change)
-        self.flt = "valid"  # Nazwa aktualnego filtru
-
+        self.flt = "valid"  # Ustawienie aktywnego filtru
+        self.param_changed.connect(self.param_change)
+        self.old_param = ""
+        self.param = "H"  # Ustawienie aktywnego parametru
 
     def __setattr__(self, attr, val):
         """Przechwycenie zmiany atrybutu."""
         if attr == "flt":
             self.flt_changed.emit(val)
+        if attr == "param":
+            self.param_changed.emit(val)
         if attr == "all_cnt":
             b_txt = f"Wszystkie \n \n ({val})"
             self.btn_update(self.dlg.btn_flt_all, b_txt, val)
@@ -159,6 +183,42 @@ class ADataFrame(DataFrameModel):
             else:
                 btn.setChecked(False)
 
+    def param_indexing(self):
+        """Indeksacja parametrów."""
+        for dicts in self.params:
+            for key, value in dicts.items():
+                if key == 'param':
+                    param = value
+                elif key == 'df_in':
+                    df_in = value
+                elif key == 'df_out':
+                    df_out = value
+            idxs = pd.DataFrame(self.valid[param].value_counts())
+            idxs.reset_index(inplace=True)
+            idxs = idxs.rename(columns = {'index' : 'WARTOŚĆ', param : 'ILOŚĆ'})
+            idxs = idxs.sort_values(by='WARTOŚĆ').reset_index(drop=True)
+            dicts['df_in'] = idxs
+
+    def param_change(self, val):
+        """Zmiana aktywnego parametru."""
+        for dicts in self.params:
+            for key, value in dicts.items():
+                # Zapisanie zmian w parametrze, który przestaje być aktywny:
+                if self.old_param and key == 'param' and value == self.old_param:
+                    dicts['df_in'] = self.df_in
+                    dicts['df_out'] = self.df_out
+                # Wyszukanie dataframe'ów nowego aktywnego parametru:
+                if key == 'param' and value == val:
+                    new_in = dicts['df_in']
+                    new_out = dicts['df_out']
+        # Zmiana aktualnych dataframe'ów:
+        self.df_in = new_in
+        self.df_out = new_out
+        self.idx_in.setDataFrame(self.df_in)
+        self.idx_out.setDataFrame(self.df_out)
+        self.old_param = val
+        self.dlg.lab_act_param.setText(val)
+
     def btn_update(self, btn, txt, val):
         """Aktualizacja ustawień przycisku filtrującego."""
         is_enabled = True if val > 0 else False
@@ -177,6 +237,31 @@ class ADataFrame(DataFrameModel):
         self.tv.setColumnWidth(7, 50)
         self.tv.setColumnWidth(8, 50)
         self.tv.horizontalHeader().setMinimumSectionSize(1)
+
+    def index_move(self, direction):
+        """Przeniesienie rekordu indeksu z tabeli indeksów ustalonych do odrzuconych lub na odwrót."""
+        if direction == "down":
+            _from = self.idx_in
+            df_from = self.df_in
+            _to = self.idx_out
+            df_to = self.df_out
+        elif direction == "up":
+            _from = self.idx_out
+            df_from = self.df_out
+            _to = self.idx_in
+            df_to = self.df_in
+        idx_row = _from.sel_tv.currentIndex().row()
+        if idx_row < 0:  # Brak zaznaczonego wiersza
+            return
+        sel_row = df_from[df_from.index == idx_row]
+        df_to = df_to.append(sel_row, ignore_index=True)
+        df_to = df_to.sort_values(by='WARTOŚĆ').reset_index(drop=True)
+        df_from.drop(sel_row.index, inplace=True)
+        df_from = df_from.reset_index(drop=True)
+        self.df_in = df_from if direction == "down" else df_to
+        self.df_out = df_to if direction == "down" else df_from
+        _from.setDataFrame(df_from)
+        _to.setDataFrame(df_to)
 
     def init_validation(self):
         """Wykrycie błędów związanych z id i współrzędnymi otworów. Selekcja prawidłowych rekordów."""
@@ -198,27 +283,20 @@ class ADataFrame(DataFrameModel):
         self.valid = self.valid.reset_index(drop=True)
         self.valid_cnt = len(self.valid)
 
-        # print(self.valid['Z'].dtypes)
-        # self.valid['Z'] = pd.to_numeric(self.valid['Z'], errors='coerce')
-        # self.valid['Z'].astype(float).applymap('{:,.2f}'.format))
-        z_vals = pd.DataFrame(self.valid['Z'].value_counts())
-        z_vals.reset_index(inplace=True)
-        z_vals = z_vals.rename(columns = {'index' : 'WARTOŚĆ', 'Z' : 'ILOŚĆ'})
-        z_vals = z_vals.sort_values(by='WARTOŚĆ').reset_index(drop=True)
-        idf = IdxDataFrame(z_vals, 'Z', self.dlg)
-
 
 class IdxDataFrame(DataFrameModel):
-    """Subklasa DataFrameModel obsługująca dane ze zbioru A."""
-    def __init__(self, df, param, dlg):
+    """Subklasa DataFrameModel obsługująca indeksy wybranego parametru (np. Z)."""
+    def __init__(self, df, tv, dlg):
         super().__init__(df)
-
         self.dlg = dlg  # Referencja do ui
-        self.tv = dlg.tv_z  # Referencja do tableview
+        self.tv = tv  # Referencja do tableview
         self.tv.setModel(self)
         self.tv_format()  # Formatowanie kolumn tableview
         self.sel_tv = self.tv.selectionModel()
-        self.sel_tv.selectionChanged.connect(lambda: self.show_index_records('Z'))
+        self.sel_tv.selectionChanged.connect(self.show_index_records)
+
+    def sel_idx(self):
+        return self.sel_tv.currentIndex().row()
 
     def tv_format(self):
         """Formatowanie kolumn tableview'u."""
@@ -226,11 +304,11 @@ class IdxDataFrame(DataFrameModel):
         self.tv.setColumnWidth(1, 50)
         self.tv.horizontalHeader().setMinimumSectionSize(1)
 
-    def show_index_records(self, param):
+    def show_index_records(self):
         """Pokazanie w tv_df rekordów z parametrem równym wybranemu indeksowi."""
         self.dlg.adf.set_flt('valid')  # Przejście do filtru 'valid'
         index = self.sel_tv.currentIndex()
         value = index.sibling(index.row(), 0).data()
         df = self.dlg.adf.valid
-        df = df[df[param] == value].reset_index(drop=True)
+        df = df[df[self.dlg.adf.param] == value].reset_index(drop=True)
         self.dlg.adf.setDataFrame(df)
