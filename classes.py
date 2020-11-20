@@ -310,5 +310,6 @@ class IdxDataFrame(DataFrameModel):
         index = self.sel_tv.currentIndex()
         value = index.sibling(index.row(), 0).data()
         df = self.dlg.adf.valid
+        value = str(value) if df[self.dlg.adf.param].dtypes == 'object' else float(value)
         df = df[df[self.dlg.adf.param] == value].reset_index(drop=True)
         self.dlg.adf.setDataFrame(df)
