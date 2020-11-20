@@ -106,6 +106,8 @@ class ADataFrame(DataFrameModel):
         # Prawidłowe rekordy:
         self.valid = None
         self.valid_cnt = int()
+        # Przetworzone rekordy:
+        self.ready = None
         # Indeksy:
         self.df_in = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
         self.df_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
@@ -131,7 +133,7 @@ class ADataFrame(DataFrameModel):
         self.flt = "valid"  # Ustawienie aktywnego filtru
         self.param_changed.connect(self.param_change)
         self.old_param = ""
-        self.param = "H"  # Ustawienie aktywnego parametru
+        self.param = "ROK"  # Ustawienie aktywnego parametru
 
     def __setattr__(self, attr, val):
         """Przechwycenie zmiany atrybutu."""
@@ -154,6 +156,8 @@ class ADataFrame(DataFrameModel):
         if attr == "valid_cnt":
             b_txt = f"Poprawne \n \n ({val})"
             self.btn_update(self.dlg.btn_flt_valid, b_txt, val)
+            b_txt = f"Przetworzone \n \n ({val})"
+            self.btn_update(self.dlg.btn_flt_ready, b_txt, val)
         super().__setattr__(attr, val)
 
     def set_flt(self, _flt):
@@ -166,7 +170,8 @@ class ADataFrame(DataFrameModel):
                 'idna' : self.dlg.btn_flt_idna,
                 'idnu' : self.dlg.btn_flt_idnu,
                 'xynv' : self.dlg.btn_flt_xynv,
-                'valid' : self.dlg.btn_flt_valid}
+                'valid' : self.dlg.btn_flt_valid,
+                'ready' : self.dlg.btn_flt_ready}
         self.btns_update(btns[val])
 
     def btns_update(self, _btn):
@@ -175,7 +180,8 @@ class ADataFrame(DataFrameModel):
                 self.dlg.btn_flt_idna : self.idna,
                 self.dlg.btn_flt_idnu : self.idnu,
                 self.dlg.btn_flt_xynv : self.xynv,
-                self.dlg.btn_flt_valid : self.valid}
+                self.dlg.btn_flt_valid : self.valid,
+                self.dlg.btn_flt_ready : self.ready}
         for btn, df in btns.items():
             if btn == _btn:
                 btn.setChecked(True)
@@ -282,6 +288,7 @@ class ADataFrame(DataFrameModel):
         self.valid = self.all[~self.all.reset_index().index.isin(idx_nv['idx'])]
         self.valid = self.valid.reset_index(drop=True)
         self.valid_cnt = len(self.valid)
+        self.ready = self.valid.copy()
 
 
 class IdxDataFrame(DataFrameModel):
@@ -296,6 +303,7 @@ class IdxDataFrame(DataFrameModel):
         self.sel_tv.selectionChanged.connect(self.show_index_records)
 
     def sel_idx(self):
+        """Zwraca indeks zaznaczonego wiersza z tableview."""
         return self.sel_tv.currentIndex().row()
 
     def tv_format(self):
