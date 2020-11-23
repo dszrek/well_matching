@@ -123,9 +123,9 @@ class ADataFrame(DataFrameModel):
         self.r_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
 
         self.params = [
-            {'param' : 'Z', 'df_in' : self.z_in, 'df_out' : self.z_out},
-            {'param' : 'H', 'df_in' : self.h_in, 'df_out' : self.h_out},
-            {'param' : 'ROK', 'df_in' : self.r_in, 'df_out' : self.r_out}
+            {'param' : 'Z', 'df_in' : self.z_in, 'df_out' : self.z_out, 'btn' : self.dlg.btn_param_z},
+            {'param' : 'H', 'df_in' : self.h_in, 'df_out' : self.h_out, 'btn' : self.dlg.btn_param_h},
+            {'param' : 'ROK', 'df_in' : self.r_in, 'df_out' : self.r_out, 'btn' : self.dlg.btn_param_r}
             ]
 
         self.init_validation()  # Walidacja rekordów
@@ -177,9 +177,9 @@ class ADataFrame(DataFrameModel):
                 'xynv' : self.dlg.btn_flt_xynv,
                 'valid' : self.dlg.btn_flt_valid,
                 'ready' : self.dlg.btn_flt_ready}
-        self.btns_update(btns[val])
+        self.flt_btns_update(btns[val])
 
-    def btns_update(self, _btn):
+    def flt_btns_update(self, _btn):
         """Aktualizacja stanu przycisków filtrujących."""
         btns = {self.dlg.btn_flt_all : self.all,
                 self.dlg.btn_flt_idna : self.idna,
@@ -222,6 +222,7 @@ class ADataFrame(DataFrameModel):
                 if key == 'param' and value == val:
                     new_in = dicts['df_in']
                     new_out = dicts['df_out']
+                    new_btn = dicts['btn']
         # Zmiana aktualnych dataframe'ów:
         self.df_in = new_in
         self.df_out = new_out
@@ -229,6 +230,15 @@ class ADataFrame(DataFrameModel):
         self.idx_out.setDataFrame(self.df_out)
         self.old_param = val
         self.dlg.lab_act_param.setText(val)
+        self.param_btns_update(new_btn)
+
+    def param_btns_update(self, _btn):
+        """Aktualizacja stanu przycisków parametrów."""
+        btns = [self.dlg.btn_param_z,
+                self.dlg.btn_param_h,
+                self.dlg.btn_param_r]
+        for btn in btns:
+            btn.setChecked(True) if btn == _btn else btn.setChecked(False)
 
     def btn_update(self, btn, txt, val):
         """Aktualizacja ustawień przycisku filtrującego."""
