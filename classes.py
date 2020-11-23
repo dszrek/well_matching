@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import pandas as pd
+import numpy as np
 
 from qgis.PyQt.QtCore import Qt, QAbstractTableModel, pyqtSignal, pyqtProperty, pyqtSlot, QVariant, QModelIndex
 
@@ -272,6 +273,15 @@ class ADataFrame(DataFrameModel):
         self.df_out = df_to if direction == "down" else df_from
         _from.setDataFrame(df_from)
         _to.setDataFrame(df_to)
+        self.ready_update()
+
+    def ready_update(self):
+        """Aktualizacja df_ready."""
+        # Skasowanie wszystkich zmian w ready:
+        self.ready[self.param] = self.valid[self.param]
+        # Ustawienie wartości NaN w odpowiednich komórkach:
+        out_vals = self.df_out['WARTOŚĆ'].tolist()
+        self.ready.loc[self.ready[self.param].isin(out_vals), self.param] = np.nan
 
     def init_validation(self):
         """Wykrycie błędów związanych z id i współrzędnymi otworów. Selekcja prawidłowych rekordów."""
