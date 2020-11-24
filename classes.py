@@ -121,12 +121,38 @@ class ADataFrame(DataFrameModel):
         self.h_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
         self.r_in = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
         self.r_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        # Typy parametrów:
+        self.type_in = ""
+        self.type_act = ""
+        self.type_out = ""
+        self.type_in_z = ""
+        self.type_act_z = ""
+        self.type_out_z = ""
+        self.type_in_h = ""
+        self.type_act_h = ""
+        self.type_out_h = ""
+        self.type_in_r = ""
+        self.type_act_r = ""
+        self.type_out_r = ""
 
         self.params = [
-            {'param' : 'Z', 'df_in' : self.z_in, 'df_out' : self.z_out, 'btn' : self.dlg.btn_param_z},
-            {'param' : 'H', 'df_in' : self.h_in, 'df_out' : self.h_out, 'btn' : self.dlg.btn_param_h},
-            {'param' : 'ROK', 'df_in' : self.r_in, 'df_out' : self.r_out, 'btn' : self.dlg.btn_param_r}
+            {'param' : 'Z', 'df_in' : self.z_in, 'df_out' : self.z_out, 'type_in' : self.type_in_z, 'type_out' : self.type_out_z, 'type_act' : self.type_act_z, 'btn' : self.dlg.btn_param_z},
+            {'param' : 'H', 'df_in' : self.h_in, 'df_out' : self.h_out, 'type_in' : self.type_in_h, 'type_out' : self.type_out_h, 'type_act' : self.type_act_h, 'btn' : self.dlg.btn_param_h},
+            {'param' : 'ROK', 'df_in' : self.r_in, 'df_out' : self.r_out, 'type_in' : self.type_in_r, 'type_out' : self.type_out_r, 'type_act' : self.type_act_r, 'btn' : self.dlg.btn_param_r}
             ]
+
+        self.dtypes = [
+            {None : ''},
+            {'object' : 'tekst'},
+            {'Int64' : 'liczba całkowita'},
+            {'float64' : 'liczba ułamkowa'},
+            {'bool' : 'prawda/fałsz'}
+            ]
+        # Populacja combobox'a z oczekiwanymi typami:
+        for dtype in self.dtypes:
+            for val in dtype.values():
+                self.dlg.cmb_type.addItem(val)
+        self.dlg.cmb_type.currentIndexChanged.connect(self.cmb_type_change)
 
         self.init_validation()  # Walidacja rekordów
         self.param_indexing()  # Indeksacja parametrów
@@ -134,7 +160,7 @@ class ADataFrame(DataFrameModel):
         self.flt = "valid"  # Ustawienie aktywnego filtru
         self.param_changed.connect(self.param_change)
         self.old_param = ""
-        self.param = "ROK"  # Ustawienie aktywnego parametru
+        self.param = "Z"  # Ustawienie aktywnego parametru
 
     def __setattr__(self, attr, val):
         """Przechwycenie zmiany atrybutu."""
@@ -204,11 +230,19 @@ class ADataFrame(DataFrameModel):
                     df_in = value
                 elif key == 'df_out':
                     df_out = value
+                elif key == 'type_in':
+                    type_in = value
+                elif key == 'type_act':
+                    type_act = value
+            # Utworzenie dataframe z unikalnymi wartościami parametru:
             idxs = pd.DataFrame(self.valid[param].value_counts())
             idxs.reset_index(inplace=True)
             idxs = idxs.rename(columns = {'index' : 'WARTOŚĆ', param : 'ILOŚĆ'})
             idxs = idxs.sort_values(by='WARTOŚĆ').reset_index(drop=True)
             dicts['df_in'] = idxs
+            # Zapisanie typu parametru:
+            dicts['type_in'] = self.valid[param].dtypes
+            dicts['type_act'] = self.ready[param].dtypes
 
     def param_change(self, val):
         """Zmiana aktywnego parametru."""
@@ -218,19 +252,35 @@ class ADataFrame(DataFrameModel):
                 if self.old_param and key == 'param' and value == self.old_param:
                     dicts['df_in'] = self.df_in
                     dicts['df_out'] = self.df_out
+                    dicts['type_in'] = self.type_in
+                    dicts['type_act'] = self.type_act
+                    dicts['type_out'] = self.type_out
                 # Wyszukanie dataframe'ów nowego aktywnego parametru:
                 if key == 'param' and value == val:
                     new_in = dicts['df_in']
                     new_out = dicts['df_out']
+                    new_type_in = dicts['type_in']
+                    new_type_act = dicts['type_act']
+                    new_type_out = dicts['type_out']
                     new_btn = dicts['btn']
+        self.old_param = val
+        self.dlg.lab_act_param.setText(val)
+        self.param_btns_update(new_btn)
         # Zmiana aktualnych dataframe'ów:
         self.df_in = new_in
         self.df_out = new_out
         self.idx_in.setDataFrame(self.df_in)
         self.idx_out.setDataFrame(self.df_out)
-        self.old_param = val
-        self.dlg.lab_act_param.setText(val)
-        self.param_btns_update(new_btn)
+        # Zmiana w ustawieniach typu parametru:
+        self.type_in = new_type_in
+        self.type_act = new_type_act
+        self.type_out = new_type_out
+        self.dlg.lab_type_in.setText(self.type_desc(self.type_in))
+        self.dlg.cmb_type.currentIndexChanged.disconnect(self.cmb_type_change)
+        self.dlg.cmb_type.setCurrentText(self.type_desc(self.type_out))
+        self.dlg.cmb_type.currentIndexChanged.connect(self.cmb_type_change)
+        self.dlg.lab_type_act.setText(self.type_desc(self.type_act))
+        self.frm_color_update()
 
     def param_btns_update(self, _btn):
         """Aktualizacja stanu przycisków parametrów."""
@@ -246,27 +296,78 @@ class ADataFrame(DataFrameModel):
         btn.setText(txt)
         btn.setEnabled(is_enabled)
 
-    def tv_format(self):
-        """Formatowanie kolumn tableview'u."""
-        self.tv.setColumnWidth(0, 100)
-        self.tv.setColumnWidth(1, 270)
-        self.tv.setColumnWidth(2, 60)
-        self.tv.setColumnWidth(3, 60)
-        self.tv.setColumnWidth(4, 50)
-        self.tv.setColumnWidth(5, 50)
-        self.tv.setColumnWidth(6, 50)
-        self.tv.setColumnWidth(7, 50)
-        self.tv.setColumnWidth(8, 50)
-        self.tv.horizontalHeader().setMinimumSectionSize(1)
+    def type_desc(self, _type):
+        """Zwraca opis wybranego dtypes."""
+        _type = str(_type)
+        for dicts in self.dtypes:
+            for dt, desc in dicts.items():
+                if dt == _type:
+                    return desc
+
+    def type_name(self, _type):
+        """Zwraca nazwę wybranego dtypes."""
+        _type = str(_type)
+        for dicts in self.dtypes:
+            for dt, desc in dicts.items():
+                if desc == _type:
+                    return dt
+
+    def cmb_type_change(self):
+        """Zmiana wartości w combobox'ie act_type."""
+        type_txt = self.dlg.cmb_type.currentText()
+        self.type_out = self.type_name(type_txt)
+        self.type_change()
+
+    def type_change(self):
+        """Próba zmiany typu kolumny w dataframe 'ready'."""
+        try:
+            self.ready[self.param] = self.ready[self.param].astype('float').astype(self.type_out)
+            self.df_in['WARTOŚĆ'] = self.df_in['WARTOŚĆ'].astype('float').astype(self.type_out)
+        except:
+            pass
+        self.type_act = self.ready[self.param].dtypes
+        self.dlg.lab_type_act.setText(self.type_desc(self.type_act))
+        try:
+            # Próba sortowania liczbowego:
+            a = self.df_in['WARTOŚĆ'].astype(float).argsort()
+            self.df_in = pd.DataFrame(self.df_in.values[a], self.df_in.index[a], self.df_in.columns).reset_index(drop=True)
+        except:
+            # Sortowanie tekstowe:
+            a = self.df_in['WARTOŚĆ'].astype(str).argsort()
+            self.df_in = pd.DataFrame(self.df_in.values[a], self.df_in.index[a], self.df_in.columns).reset_index(drop=True)
+        self.idx_in.setDataFrame(self.df_in)
+        self.frm_color_update()
+
+    def frm_color_update(self):
+        """Zarządzanie kolorem ramki typów."""
+        ss_red = """QFrame #frm_param_type {
+                border-radius: 4px;
+                border: 1px solid white;
+                background-color: rgb(248,173,173)
+            }"""
+        ss_green = """QFrame #frm_param_type {
+                border-radius: 4px;
+                border: 1px solid white;
+                background-color: rgb(198,224,180)
+            }"""
+        if not self.type_out:
+            self.dlg.frm_param_type.setStyleSheet(ss_red)
+            return
+        if self.type_out == self.type_act:
+            self.dlg.frm_param_type.setStyleSheet(ss_green)
+        else:
+            self.dlg.frm_param_type.setStyleSheet(ss_red)
 
     def index_move(self, direction):
         """Przeniesienie rekordu indeksu z tabeli indeksów ustalonych do odrzuconych lub na odwrót."""
         if direction == "down":
+            self.df_in['ILOŚĆ'] = self.df_in['ILOŚĆ'].astype('object')
             _from = self.idx_in
             df_from = self.df_in
             _to = self.idx_out
             df_to = self.df_out
         elif direction == "up":
+            self.df_in['WARTOŚĆ'] = self.df_in['WARTOŚĆ'].astype('object')
             _from = self.idx_out
             df_from = self.df_out
             _to = self.idx_in
@@ -276,7 +377,14 @@ class ADataFrame(DataFrameModel):
             return
         sel_row = df_from[df_from.index == idx_row]
         df_to = df_to.append(sel_row, ignore_index=True)
-        df_to = df_to.sort_values(by='WARTOŚĆ').reset_index(drop=True)
+        try:
+            # Próba sortowania liczbowego:
+            a = df_to['WARTOŚĆ'].astype(float).argsort()
+            df_to = pd.DataFrame(df_to.values[a], df_to.index[a], df_to.columns).reset_index(drop=True)
+        except:
+            # Sortowanie tekstowe:
+            a = df_to['WARTOŚĆ'].astype(str).argsort()
+            df_to = pd.DataFrame(df_to.values[a], df_to.index[a], df_to.columns).reset_index(drop=True)
         df_from.drop(sel_row.index, inplace=True)
         df_from = df_from.reset_index(drop=True)
         self.df_in = df_from if direction == "down" else df_to
@@ -292,6 +400,7 @@ class ADataFrame(DataFrameModel):
         # Ustawienie wartości NaN w odpowiednich komórkach:
         out_vals = self.df_out['WARTOŚĆ'].tolist()
         self.ready.loc[self.ready[self.param].isin(out_vals), self.param] = np.nan
+        self.type_change()  # Próba zmiany typu kolumny
 
     def init_validation(self):
         """Wykrycie błędów związanych z id i współrzędnymi otworów. Selekcja prawidłowych rekordów."""
@@ -313,6 +422,19 @@ class ADataFrame(DataFrameModel):
         self.valid = self.valid.reset_index(drop=True)
         self.valid_cnt = len(self.valid)
         self.ready = self.valid.copy()
+
+    def tv_format(self):
+        """Formatowanie kolumn tableview'u."""
+        self.tv.setColumnWidth(0, 100)
+        self.tv.setColumnWidth(1, 270)
+        self.tv.setColumnWidth(2, 60)
+        self.tv.setColumnWidth(3, 60)
+        self.tv.setColumnWidth(4, 50)
+        self.tv.setColumnWidth(5, 50)
+        self.tv.setColumnWidth(6, 50)
+        self.tv.setColumnWidth(7, 50)
+        self.tv.setColumnWidth(8, 50)
+        self.tv.horizontalHeader().setMinimumSectionSize(1)
 
 
 class IdxDataFrame(DataFrameModel):
