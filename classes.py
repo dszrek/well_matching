@@ -110,16 +110,16 @@ class ADataFrame(DataFrameModel):
         # Przetworzone rekordy:
         self.ready = None
         # Indeksy:
-        self.df_in = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.df_in = pd.DataFrame(columns=['ORIGIN','WARTOŚĆ', 'ILOŚĆ'])
         self.df_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
-        self.idx_in = IdxDataFrame(self.df_in, self.dlg.tv_idx_in, self.dlg)
-        self.idx_out = IdxDataFrame(self.df_out, self.dlg.tv_idx_out, self.dlg)
+        self.idx_in = IdxDataFrame(self.df_in, self.dlg.tv_idx_in, True, self.dlg)
+        self.idx_out = IdxDataFrame(self.df_out, self.dlg.tv_idx_out, False, self.dlg)
         # Dataframe'y parametrów:
-        self.z_in = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.z_in = pd.DataFrame(columns=['ORIGIN', 'WARTOŚĆ', 'ILOŚĆ'])
         self.z_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
-        self.h_in = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.h_in = pd.DataFrame(columns=['ORIGIN', 'WARTOŚĆ', 'ILOŚĆ'])
         self.h_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
-        self.r_in = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.r_in = pd.DataFrame(columns=['ORIGIN', 'WARTOŚĆ', 'ILOŚĆ'])
         self.r_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
         # Typy parametrów:
         self.type_in = ""
@@ -238,6 +238,8 @@ class ADataFrame(DataFrameModel):
             idxs = pd.DataFrame(self.valid[param].value_counts())
             idxs.reset_index(inplace=True)
             idxs = idxs.rename(columns = {'index' : 'WARTOŚĆ', param : 'ILOŚĆ'})
+            idxs['ORIGIN'] = idxs['WARTOŚĆ']
+            idxs = idxs[['ORIGIN', 'WARTOŚĆ', 'ILOŚĆ']]
             idxs = idxs.sort_values(by='WARTOŚĆ').reset_index(drop=True)
             dicts['df_in'] = idxs
             # Zapisanie typu parametru:
@@ -269,7 +271,7 @@ class ADataFrame(DataFrameModel):
         # Zmiana aktualnych dataframe'ów:
         self.df_in = new_in
         self.df_out = new_out
-        self.idx_in.setDataFrame(self.df_in)
+        self.idx_in.setDataFrame(self.df_in[['WARTOŚĆ', 'ILOŚĆ']])
         self.idx_out.setDataFrame(self.df_out)
         # Zmiana w ustawieniach typu parametru:
         self.type_in = new_type_in
@@ -335,7 +337,7 @@ class ADataFrame(DataFrameModel):
             # Sortowanie tekstowe:
             a = self.df_in['WARTOŚĆ'].astype(str).argsort()
             self.df_in = pd.DataFrame(self.df_in.values[a], self.df_in.index[a], self.df_in.columns).reset_index(drop=True)
-        self.idx_in.setDataFrame(self.df_in)
+        self.idx_in.setDataFrame(self.df_in[['WARTOŚĆ', 'ILOŚĆ']])
         self.frm_color_update()
 
     def frm_color_update(self):
@@ -376,15 +378,30 @@ class ADataFrame(DataFrameModel):
         if idx_row < 0:  # Brak zaznaczonego wiersza
             return
         sel_row = df_from[df_from.index == idx_row]
+        if direction == "down":
+            sel_row = sel_row[['ORIGIN', 'ILOŚĆ']].rename(columns = {'ORIGIN' : 'WARTOŚĆ'})
+        elif direction == "up":
+            sel_row['ORIGIN'] = sel_row['WARTOŚĆ']
+            sel_row = sel_row[['ORIGIN', 'WARTOŚĆ', 'ILOŚĆ']]
         df_to = df_to.append(sel_row, ignore_index=True)
-        try:
-            # Próba sortowania liczbowego:
-            a = df_to['WARTOŚĆ'].astype(float).argsort()
-            df_to = pd.DataFrame(df_to.values[a], df_to.index[a], df_to.columns).reset_index(drop=True)
-        except:
-            # Sortowanie tekstowe:
-            a = df_to['WARTOŚĆ'].astype(str).argsort()
-            df_to = pd.DataFrame(df_to.values[a], df_to.index[a], df_to.columns).reset_index(drop=True)
+        if len(df_from) > 1:
+            try:
+                # Próba sortowania liczbowego:
+                a = df_from['WARTOŚĆ'].astype(float).argsort()
+                df_from = pd.DataFrame(df_from.values[a], df_from.index[a], df_from.columns).reset_index(drop=True)
+            except:
+                # Sortowanie tekstowe:
+                a = df_from['WARTOŚĆ'].astype(str).argsort()
+                df_from = pd.DataFrame(df_from.values[a], df_from.index[a], df_from.columns).reset_index(drop=True)
+        if len(df_to) > 1:
+            try:
+                # Próba sortowania liczbowego:
+                a = df_to['WARTOŚĆ'].astype(float).argsort()
+                df_to = pd.DataFrame(df_to.values[a], df_to.index[a], df_to.columns).reset_index(drop=True)
+            except:
+                # Sortowanie tekstowe:
+                a = df_to['WARTOŚĆ'].astype(str).argsort()
+                df_to = pd.DataFrame(df_to.values[a], df_to.index[a], df_to.columns).reset_index(drop=True)
         df_from.drop(sel_row.index, inplace=True)
         df_from = df_from.reset_index(drop=True)
         self.df_in = df_from if direction == "down" else df_to
@@ -439,8 +456,9 @@ class ADataFrame(DataFrameModel):
 
 class IdxDataFrame(DataFrameModel):
     """Subklasa DataFrameModel obsługująca indeksy wybranego parametru (np. Z)."""
-    def __init__(self, df, tv, dlg):
+    def __init__(self, df, tv, _in, dlg):
         super().__init__(df)
+        self._in = _in
         self.dlg = dlg  # Referencja do ui
         self.tv = tv  # Referencja do tableview
         self.tv.setModel(self)
@@ -463,6 +481,10 @@ class IdxDataFrame(DataFrameModel):
         self.dlg.adf.set_flt('valid')  # Przejście do filtru 'valid'
         index = self.sel_tv.currentIndex()
         value = index.sibling(index.row(), 0).data()
+        if self._in:  # Wartości prawidłowe
+            s_df = self.dlg.adf.df_in
+            value = float(value) if self.dlg.adf.type_act == 'float64' or self.dlg.adf.type_act == 'Int64' else str(value)
+            value = s_df[s_df['WARTOŚĆ'] == value]['ORIGIN'].values[0]
         df = self.dlg.adf.valid
         value = str(value) if df[self.dlg.adf.param].dtypes == 'object' else float(value)
         df = df[df[self.dlg.adf.param] == value].reset_index(drop=True)
