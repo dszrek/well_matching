@@ -68,4 +68,3 @@ class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS1):  # type: ignore
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-        self.resize(1600, 1000)
