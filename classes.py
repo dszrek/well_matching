@@ -85,6 +85,8 @@ class ADataFrame(DataFrameModel):
 
     flt_changed = pyqtSignal(str)
     param_changed = pyqtSignal(str)
+    bmode_changed = pyqtSignal(bool)
+    done_changed = pyqtSignal(bool)
 
     def __init__(self, df, dlg):
         super().__init__(df)
@@ -92,6 +94,8 @@ class ADataFrame(DataFrameModel):
         self.tv = dlg.tv_df  # Referencja do tableview
         self.dlg.tv_df.setModel(self)
         self.tv_format()  # Formatowanie kolumn tableview
+        self.bmode = False  # Tryb aktywnego parametru typu boolean
+        self.bmode_changed.connect(self.bmode_change)
         # Wszystkie rekordy:
         self.all = df  # Dataframe
         self.all_cnt = len(self.all)  # Suma rekordów
@@ -121,26 +125,43 @@ class ADataFrame(DataFrameModel):
         self.h_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
         self.r_in = pd.DataFrame(columns=['ORIGIN', 'WARTOŚĆ', 'ILOŚĆ'])
         self.r_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.s_in = pd.DataFrame(columns=['ORIGIN', 'WARTOŚĆ', 'ILOŚĆ'])
+        self.s_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
+        self.t_in = pd.DataFrame(columns=['ORIGIN', 'WARTOŚĆ', 'ILOŚĆ'])
+        self.t_out = pd.DataFrame(columns=['WARTOŚĆ', 'ILOŚĆ'])
         # Typy parametrów:
         self.type_in = ""
         self.type_act = ""
         self.type_out = ""
+        self.done = False
         self.type_in_z = ""
         self.type_act_z = ""
         self.type_out_z = ""
+        self.done_z = False
         self.type_in_h = ""
         self.type_act_h = ""
         self.type_out_h = ""
+        self.done_h = False
         self.type_in_r = ""
         self.type_act_r = ""
         self.type_out_r = ""
+        self.done_r = False
+        self.type_in_s = ""
+        self.type_act_s = ""
+        self.type_out_s = ""
+        self.done_s = False
+        self.type_in_t = ""
+        self.type_act_t = ""
+        self.type_out_t = ""
+        self.done_t = False
 
         self.params = [
-            {'param' : 'Z', 'df_in' : self.z_in, 'df_out' : self.z_out, 'type_in' : self.type_in_z, 'type_out' : self.type_out_z, 'type_act' : self.type_act_z, 'btn' : self.dlg.btn_param_z},
-            {'param' : 'H', 'df_in' : self.h_in, 'df_out' : self.h_out, 'type_in' : self.type_in_h, 'type_out' : self.type_out_h, 'type_act' : self.type_act_h, 'btn' : self.dlg.btn_param_h},
-            {'param' : 'ROK', 'df_in' : self.r_in, 'df_out' : self.r_out, 'type_in' : self.type_in_r, 'type_out' : self.type_out_r, 'type_act' : self.type_act_r, 'btn' : self.dlg.btn_param_r}
+            {'param' : 'Z', 'df_in' : self.z_in, 'df_out' : self.z_out, 'type_in' : self.type_in_z, 'type_out' : self.type_out_z, 'type_act' : self.type_act_z, 'done' : self.done_z, 'btn' : self.dlg.btn_param_z},
+            {'param' : 'H', 'df_in' : self.h_in, 'df_out' : self.h_out, 'type_in' : self.type_in_h, 'type_out' : self.type_out_h, 'type_act' : self.type_act_h, 'done' : self.done_h, 'btn' : self.dlg.btn_param_h},
+            {'param' : 'ROK', 'df_in' : self.r_in, 'df_out' : self.r_out, 'type_in' : self.type_in_r, 'type_out' : self.type_out_r, 'type_act' : self.type_act_r, 'done' : self.done_r, 'btn' : self.dlg.btn_param_r},
+            {'param' : 'SKAN', 'df_in' : self.s_in, 'df_out' : self.s_out, 'type_in' : self.type_in_s, 'type_out' : self.type_out_s, 'type_act' : self.type_act_s, 'done' : self.done_s, 'btn' : self.dlg.btn_param_s},
+            {'param' : 'TRANS', 'df_in' : self.t_in, 'df_out' : self.t_out, 'type_in' : self.type_in_t, 'type_out' : self.type_out_t, 'type_act' : self.type_act_t, 'done' : self.done_t, 'btn' : self.dlg.btn_param_t}
             ]
-
         self.dtypes = [
             {None : ''},
             {'object' : 'tekst'},
@@ -148,10 +169,16 @@ class ADataFrame(DataFrameModel):
             {'float64' : 'liczba ułamkowa'},
             {'bool' : 'prawda/fałsz'}
             ]
+        self.etypes = [
+            {'int32' : 'Int64'},
+            {'int64' : 'Int64'}
+        ]
+
         # Populacja combobox'a z oczekiwanymi typami:
-        for dtype in self.dtypes:
-            for val in dtype.values():
-                self.dlg.cmb_type.addItem(val)
+        if len(self.dlg.cmb_type) == 0:
+            for dtype in self.dtypes:
+                for val in dtype.values():
+                    self.dlg.cmb_type.addItem(val)
         self.dlg.cmb_type.currentIndexChanged.connect(self.cmb_type_change)
 
         self.init_validation()  # Walidacja rekordów
@@ -161,10 +188,15 @@ class ADataFrame(DataFrameModel):
         self.param_changed.connect(self.param_change)
         self.old_param = ""
         self.param = "Z"  # Ustawienie aktywnego parametru
+        self.done_changed.connect(self.done_change)
 
     def __setattr__(self, attr, val):
         """Przechwycenie zmiany atrybutu."""
         super().__setattr__(attr, val)
+        if attr == "done":
+            self.done_changed.emit(val)
+        if attr == "bmode":
+            self.bmode_changed.emit(val)
         if attr == "flt":
             self.flt_changed.emit(val)
         if attr == "param":
@@ -194,6 +226,31 @@ class ADataFrame(DataFrameModel):
     def set_param(self, _param):
         """Ustawienie aktywnego parametru."""
         self.param = _param
+
+    def done_change(self, val):
+        """Zmiana atrybutu 'done' aktywnego parametru."""
+        if not val:
+            # Skasowanie wszystkich zmian w ready:
+            self.ready[self.param] = self.valid[self.param]
+        self.dlg.btn_bool.setEnabled(not val)
+        self.frm_color_update()
+
+    def bmode_change(self, val):
+        """Zmiana trybu aktywnego parametru typu boolean."""
+        if val:
+            self.dlg.lab_idx_in.setText("Wartości prawdy:")
+            self.dlg.lab_idx_out.setText("Wartości fałszu:")
+            self.dlg.btn_idx_in.setText("▲     PRAWDA     ▲")
+            self.dlg.btn_idx_out.setText("▼        FAŁSZ       ▼")
+        else:
+            self.dlg.lab_idx_in.setText("Wartości prawidłowe:")
+            self.dlg.lab_idx_out.setText("Wartości odrzucone:")
+            self.dlg.btn_idx_in.setText("▲   PRZYWRÓĆ   ▲")
+            self.dlg.btn_idx_out.setText("▼      ODRZUĆ     ▼")
+        self.dlg.h_line.setVisible(not val)
+        self.dlg.lab_type_act_title.setVisible(not val)
+        self.dlg.lab_type_act.setVisible(not val)
+        self.dlg.btn_bool.setVisible(val)
 
     def flt_change(self, val):
         """Zmiana fitru danych."""
@@ -243,8 +300,16 @@ class ADataFrame(DataFrameModel):
             idxs = idxs.sort_values(by='WARTOŚĆ').reset_index(drop=True)
             dicts['df_in'] = idxs
             # Zapisanie typu parametru:
-            dicts['type_in'] = self.valid[param].dtypes
-            dicts['type_act'] = self.ready[param].dtypes
+            dt = self.valid[param].dtypes
+            dt_chk = self.type_desc(dt)
+            if not dt_chk:
+                et = self.type_conv(dt)
+                if et:
+                    dt = et
+                else:
+                    print(f"=====================x-type: {dt} ===============================")
+            dicts['type_in'] = dt
+            dicts['type_act'] = dt
 
     def param_change(self, val):
         """Zmiana aktywnego parametru."""
@@ -257,6 +322,7 @@ class ADataFrame(DataFrameModel):
                     dicts['type_in'] = self.type_in
                     dicts['type_act'] = self.type_act
                     dicts['type_out'] = self.type_out
+                    dicts['done'] = self.done
                 # Wyszukanie dataframe'ów nowego aktywnego parametru:
                 if key == 'param' and value == val:
                     new_in = dicts['df_in']
@@ -264,6 +330,7 @@ class ADataFrame(DataFrameModel):
                     new_type_in = dicts['type_in']
                     new_type_act = dicts['type_act']
                     new_type_out = dicts['type_out']
+                    new_done = dicts['done']
                     new_btn = dicts['btn']
         self.old_param = val
         self.dlg.lab_act_param.setText(val)
@@ -282,13 +349,16 @@ class ADataFrame(DataFrameModel):
         self.dlg.cmb_type.setCurrentText(self.type_desc(self.type_out))
         self.dlg.cmb_type.currentIndexChanged.connect(self.cmb_type_change)
         self.dlg.lab_type_act.setText(self.type_desc(self.type_act))
-        self.frm_color_update()
+        self.bmode = True if self.type_out == "bool" else False
+        self.done = new_done
 
     def param_btns_update(self, _btn):
         """Aktualizacja stanu przycisków parametrów."""
         btns = [self.dlg.btn_param_z,
                 self.dlg.btn_param_h,
-                self.dlg.btn_param_r]
+                self.dlg.btn_param_r,
+                self.dlg.btn_param_s,
+                self.dlg.btn_param_t]
         for btn in btns:
             btn.setChecked(True) if btn == _btn else btn.setChecked(False)
 
@@ -314,19 +384,38 @@ class ADataFrame(DataFrameModel):
                 if desc == _type:
                     return dt
 
+    def type_conv(self, _type):
+        """Konwertuje wybrany dtypes do podstawowego."""
+        _type = str(_type)
+        for dicts in self.etypes:
+            for dt, et in dicts.items():
+                if dt == _type:
+                    return et
+
     def cmb_type_change(self):
         """Zmiana wartości w combobox'ie act_type."""
         type_txt = self.dlg.cmb_type.currentText()
         self.type_out = self.type_name(type_txt)
-        self.type_change()
+        if type_txt == "":
+            self.type_out = "object"
+        if type_txt == "prawda/fałsz":
+            self.bmode = True
+            self.done = False
+        else:
+            self.bmode = False
+            self.ready_set_nan()
+            self.type_change()
 
     def type_change(self):
         """Próba zmiany typu kolumny w dataframe 'ready'."""
-        try:
-            self.ready[self.param] = self.ready[self.param].astype('float').astype(self.type_out)
-            self.df_in['WARTOŚĆ'] = self.df_in['WARTOŚĆ'].astype('float').astype(self.type_out)
-        except:
-            pass
+        if not self.bmode:
+            self.done = True
+            try:
+                self.ready[self.param] = self.ready[self.param].astype('float').astype(self.type_out)
+                self.df_in['WARTOŚĆ'] = self.df_in['WARTOŚĆ'].astype('float').astype(self.type_out)
+            except Exception as error:
+                self.done = False
+                print(error)
         self.type_act = self.ready[self.param].dtypes
         self.dlg.lab_type_act.setText(self.type_desc(self.type_act))
         try:
@@ -338,7 +427,6 @@ class ADataFrame(DataFrameModel):
             a = self.df_in['WARTOŚĆ'].astype(str).argsort()
             self.df_in = pd.DataFrame(self.df_in.values[a], self.df_in.index[a], self.df_in.columns).reset_index(drop=True)
         self.idx_in.setDataFrame(self.df_in[['WARTOŚĆ', 'ILOŚĆ']])
-        self.frm_color_update()
 
     def frm_color_update(self):
         """Zarządzanie kolorem ramki typów."""
@@ -352,16 +440,13 @@ class ADataFrame(DataFrameModel):
                 border: 1px solid white;
                 background-color: rgb(198,224,180)
             }"""
-        if not self.type_out:
-            self.dlg.frm_param_type.setStyleSheet(ss_red)
-            return
-        if self.type_out == self.type_act:
-            self.dlg.frm_param_type.setStyleSheet(ss_green)
-        else:
-            self.dlg.frm_param_type.setStyleSheet(ss_red)
+
+        self.dlg.frm_param_type.setStyleSheet(ss_green) if self.done else self.dlg.frm_param_type.setStyleSheet(ss_red)
 
     def index_move(self, direction):
         """Przeniesienie rekordu indeksu z tabeli indeksów ustalonych do odrzuconych lub na odwrót."""
+        if self.done:
+            self.done = False
         if direction == "down":
             self.df_in['ILOŚĆ'] = self.df_in['ILOŚĆ'].astype('object')
             _from = self.idx_in
@@ -408,16 +493,27 @@ class ADataFrame(DataFrameModel):
         self.df_out = df_to if direction == "down" else df_from
         _from.setDataFrame(df_from)
         _to.setDataFrame(df_to)
-        self.ready_update()
+        if not self.bmode:
+            self.ready_set_nan()
+        self.type_change()  # Próba zmiany typu kolumny
 
-    def ready_update(self):
-        """Aktualizacja df_ready."""
-        # Skasowanie wszystkich zmian w ready:
-        self.ready[self.param] = self.valid[self.param]
+    def ready_set_nan(self):
+        """Aktualizacja wartości NaN w df_ready."""
         # Ustawienie wartości NaN w odpowiednich komórkach:
         out_vals = self.df_out['WARTOŚĆ'].tolist()
         self.ready.loc[self.ready[self.param].isin(out_vals), self.param] = np.nan
-        self.type_change()  # Próba zmiany typu kolumny
+
+    def ready_set_bool(self):
+        """Aktualizacja wartości bool w df_ready."""
+        self.ready[self.param] = self.ready[self.param].astype('object')
+        # Ustawienie wartości boolean w odpowiednich komórkach:
+        t_vals = self.df_in['WARTOŚĆ'].tolist()
+        f_vals = self.df_out['WARTOŚĆ'].tolist()
+        self.ready.loc[self.ready[self.param].isin(t_vals), self.param] = True
+        self.ready.loc[self.ready[self.param].isin(f_vals), self.param] = False
+        self.ready[self.param].fillna(False, inplace=True)
+        self.ready[self.param] = self.ready[self.param].astype('bool')
+        self.done = True
 
     def init_validation(self):
         """Wykrycie błędów związanych z id i współrzędnymi otworów. Selekcja prawidłowych rekordów."""

@@ -65,9 +65,13 @@ def btn_conn():
     dlg.imp_dlg.btn_param_z.clicked.connect(lambda: dlg.imp_dlg.adf.set_param('Z'))
     dlg.imp_dlg.btn_param_h.clicked.connect(lambda: dlg.imp_dlg.adf.set_param('H'))
     dlg.imp_dlg.btn_param_r.clicked.connect(lambda: dlg.imp_dlg.adf.set_param('ROK'))
+    dlg.imp_dlg.btn_param_s.clicked.connect(lambda: dlg.imp_dlg.adf.set_param('SKAN'))
+    dlg.imp_dlg.btn_param_t.clicked.connect(lambda: dlg.imp_dlg.adf.set_param('TRANS'))
     # Indeksacja:
     dlg.imp_dlg.btn_idx_out.pressed.connect(lambda: dlg.imp_dlg.adf.index_move('down'))
     dlg.imp_dlg.btn_idx_in.pressed.connect(lambda: dlg.imp_dlg.adf.index_move('up'))
+    # Zatwierdzenie wartości typu boolean:
+    dlg.imp_dlg.btn_bool.pressed.connect(dlg.imp_dlg.adf.ready_set_bool)
 
 def file_dialog(dir='', for_open=True, fmt='', is_folder=False):
     """Dialog z eksploratorem Windows. Otwieranie/tworzenie folderów i plików."""
