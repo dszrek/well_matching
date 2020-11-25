@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import pandas as pd
 import numpy as np
-
+from qgis.PyQt.QtWidgets import QDialogButtonBox
 from qgis.PyQt.QtCore import Qt, QAbstractTableModel, pyqtSignal, pyqtProperty, pyqtSlot, QVariant, QModelIndex
 
 
@@ -97,6 +97,9 @@ class ADataFrame(DataFrameModel):
         self.bmode = False  # Tryb aktywnego parametru typu boolean
         self.bmode_changed.connect(self.bmode_change)
         self.light = None
+        self.btn_ok = self.dlg.btnbx.button(QDialogButtonBox.Ok)
+        self.btn_ok.setEnabled(False)
+        self.btn_ok.clicked.connect(self.data_export)
         # Wszystkie rekordy:
         self.all = df  # Dataframe
         self.all_cnt = len(self.all)  # Suma rekordów
@@ -235,6 +238,24 @@ class ADataFrame(DataFrameModel):
             self.ready[self.param] = self.valid[self.param]
         self.dlg.btn_bool.setEnabled(not val)
         self.frm_color_update()
+        self.btn_ok.setEnabled(True) if self.is_all_done() else self.btn_ok.setEnabled(False)
+
+    def is_all_done(self):
+        """Zwraca, czy wszystkie parametry zostały ustalone."""
+        for dicts in self.params:
+            act = False
+            for key, value in dicts.items():
+                if key == 'param' and value == self.param:
+                    act = True
+                if key == 'done':
+                    done = value
+            if act:
+                continue
+            if not done:
+                return False
+        if not self.done:
+            return False
+        return True
 
     def bmode_change(self, val):
         """Zmiana trybu aktywnego parametru typu boolean."""

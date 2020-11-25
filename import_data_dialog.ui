@@ -1027,7 +1027,7 @@ padding: 5px
     </widget>
    </item>
    <item>
-    <widget class="QDialogButtonBox" name="buttonBox">
+    <widget class="QDialogButtonBox" name="btnbx">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
@@ -1041,7 +1041,7 @@ padding: 5px
  <resources/>
  <connections>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>btnbx</sender>
    <signal>accepted()</signal>
    <receiver>dlg_import_data</receiver>
    <slot>accept()</slot>
@@ -1057,7 +1057,7 @@ padding: 5px
    </hints>
   </connection>
   <connection>
-   <sender>buttonBox</sender>
+   <sender>btnbx</sender>
    <signal>rejected()</signal>
    <receiver>dlg_import_data</receiver>
    <slot>reject()</slot>
