@@ -96,6 +96,7 @@ class ADataFrame(DataFrameModel):
         self.tv_format()  # Formatowanie kolumn tableview
         self.bmode = False  # Tryb aktywnego parametru typu boolean
         self.bmode_changed.connect(self.bmode_change)
+        self.light = None
         # Wszystkie rekordy:
         self.all = df  # Dataframe
         self.all_cnt = len(self.all)  # Suma rekordów
@@ -156,11 +157,11 @@ class ADataFrame(DataFrameModel):
         self.done_t = False
 
         self.params = [
-            {'param' : 'Z', 'df_in' : self.z_in, 'df_out' : self.z_out, 'type_in' : self.type_in_z, 'type_out' : self.type_out_z, 'type_act' : self.type_act_z, 'done' : self.done_z, 'btn' : self.dlg.btn_param_z},
-            {'param' : 'H', 'df_in' : self.h_in, 'df_out' : self.h_out, 'type_in' : self.type_in_h, 'type_out' : self.type_out_h, 'type_act' : self.type_act_h, 'done' : self.done_h, 'btn' : self.dlg.btn_param_h},
-            {'param' : 'ROK', 'df_in' : self.r_in, 'df_out' : self.r_out, 'type_in' : self.type_in_r, 'type_out' : self.type_out_r, 'type_act' : self.type_act_r, 'done' : self.done_r, 'btn' : self.dlg.btn_param_r},
-            {'param' : 'SKAN', 'df_in' : self.s_in, 'df_out' : self.s_out, 'type_in' : self.type_in_s, 'type_out' : self.type_out_s, 'type_act' : self.type_act_s, 'done' : self.done_s, 'btn' : self.dlg.btn_param_s},
-            {'param' : 'TRANS', 'df_in' : self.t_in, 'df_out' : self.t_out, 'type_in' : self.type_in_t, 'type_out' : self.type_out_t, 'type_act' : self.type_act_t, 'done' : self.done_t, 'btn' : self.dlg.btn_param_t}
+            {'param' : 'Z', 'df_in' : self.z_in, 'df_out' : self.z_out, 'type_in' : self.type_in_z, 'type_out' : self.type_out_z, 'type_act' : self.type_act_z, 'done' : self.done_z, 'btn' : self.dlg.btn_param_z, 'light' : self.dlg.light_z},
+            {'param' : 'H', 'df_in' : self.h_in, 'df_out' : self.h_out, 'type_in' : self.type_in_h, 'type_out' : self.type_out_h, 'type_act' : self.type_act_h, 'done' : self.done_h, 'btn' : self.dlg.btn_param_h, 'light' : self.dlg.light_h},
+            {'param' : 'ROK', 'df_in' : self.r_in, 'df_out' : self.r_out, 'type_in' : self.type_in_r, 'type_out' : self.type_out_r, 'type_act' : self.type_act_r, 'done' : self.done_r, 'btn' : self.dlg.btn_param_r, 'light' : self.dlg.light_r},
+            {'param' : 'SKAN', 'df_in' : self.s_in, 'df_out' : self.s_out, 'type_in' : self.type_in_s, 'type_out' : self.type_out_s, 'type_act' : self.type_act_s, 'done' : self.done_s, 'btn' : self.dlg.btn_param_s, 'light' : self.dlg.light_s},
+            {'param' : 'TRANS', 'df_in' : self.t_in, 'df_out' : self.t_out, 'type_in' : self.type_in_t, 'type_out' : self.type_out_t, 'type_act' : self.type_act_t, 'done' : self.done_t, 'btn' : self.dlg.btn_param_t, 'light' : self.dlg.light_t}
             ]
         self.dtypes = [
             {None : ''},
@@ -323,6 +324,7 @@ class ADataFrame(DataFrameModel):
                     dicts['type_act'] = self.type_act
                     dicts['type_out'] = self.type_out
                     dicts['done'] = self.done
+                    dicts['light'] = self.light
                 # Wyszukanie dataframe'ów nowego aktywnego parametru:
                 if key == 'param' and value == val:
                     new_in = dicts['df_in']
@@ -332,6 +334,7 @@ class ADataFrame(DataFrameModel):
                     new_type_out = dicts['type_out']
                     new_done = dicts['done']
                     new_btn = dicts['btn']
+                    new_light = dicts['light']
         self.old_param = val
         self.dlg.lab_act_param.setText(val)
         self.param_btns_update(new_btn)
@@ -350,6 +353,7 @@ class ADataFrame(DataFrameModel):
         self.dlg.cmb_type.currentIndexChanged.connect(self.cmb_type_change)
         self.dlg.lab_type_act.setText(self.type_desc(self.type_act))
         self.bmode = True if self.type_out == "bool" else False
+        self.light = new_light
         self.done = new_done
 
     def param_btns_update(self, _btn):
@@ -430,18 +434,28 @@ class ADataFrame(DataFrameModel):
 
     def frm_color_update(self):
         """Zarządzanie kolorem ramki typów."""
-        ss_red = """QFrame #frm_param_type {
+        frm_red = """QFrame #frm_param_type {
                 border-radius: 4px;
                 border: 1px solid white;
                 background-color: rgb(248,173,173)
             }"""
-        ss_green = """QFrame #frm_param_type {
+        frm_green = """QFrame #frm_param_type {
                 border-radius: 4px;
                 border: 1px solid white;
                 background-color: rgb(198,224,180)
             }"""
-
-        self.dlg.frm_param_type.setStyleSheet(ss_green) if self.done else self.dlg.frm_param_type.setStyleSheet(ss_red)
+        led_red = """QFrame {
+                border-radius: 4px;
+                border: 1px solid grey;
+                background-color: rgb(248,173,173)
+            }"""
+        led_green = """QFrame {
+                border-radius: 4px;
+                border: 1px solid grey;
+                background-color: rgb(198,224,180)
+            }"""
+        self.dlg.frm_param_type.setStyleSheet(frm_green) if self.done else self.dlg.frm_param_type.setStyleSheet(frm_red)
+        self.light.setStyleSheet(led_green) if self.done else self.light.setStyleSheet(led_red)
 
     def index_move(self, direction):
         """Przeniesienie rekordu indeksu z tabeli indeksów ustalonych do odrzuconych lub na odwrót."""
