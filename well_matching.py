@@ -74,6 +74,7 @@ class WellMatching:
 
         self.pluginIsActive = False
         self.dockwidget = None
+        # self.imp_dlg = None
 
 
     # noinspection PyMethodMayBeStatic
