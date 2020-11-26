@@ -27,13 +27,10 @@ import os
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal
 
-from .main import new_project, import_adf
+# from .main import new_project, import_adf, import_bdf
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'well_matching_dockwidget_base.ui'))
-
-FORM_CLASS1, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'import_data_dialog.ui'))
 
 class WellMatchingDockWidget(QtWidgets.QDockWidget, FORM_CLASS):  # type: ignore
 
@@ -47,24 +44,14 @@ class WellMatchingDockWidget(QtWidgets.QDockWidget, FORM_CLASS):  # type: ignore
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
-        self.widgets_conn()
+    #     self.widgets_conn()
 
-    def widgets_conn(self):
-        """Przyłączenie widget'ów do funkcji."""
-        self.btn_new_prj.pressed.connect(new_project)
-        self.btn_adf.pressed.connect(import_adf)
+    # def widgets_conn(self):
+    #     """Przyłączenie widget'ów do funkcji."""
+    #     self.btn_new_prj.pressed.connect(new_project)
+    #     self.btn_adf.pressed.connect(import_adf)
+    #     self.btn_bdf.pressed.connect(import_bdf)
 
     def closeEvent(self, event):
         self.closingPlugin.emit()
         event.accept()
-
-
-class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS1):  # type: ignore
-    def __init__(self, parent=None):
-        super(ImportDataDialog, self).__init__(parent)
-        # Set up the user interface from Designer.
-        # After setupUI you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
-        self.setupUi(self)
