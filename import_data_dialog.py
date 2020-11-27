@@ -598,6 +598,7 @@ class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS):  # type: ignore
         """Zapis danych na dysku i ich załadowanie do dockwidget'a."""
         path = self.dlg.lab_path_content.text()
         if self.a_b == "A":  # Zbiór danych A
+            self.ready = self.adf_sorting()  # Sortowanie - na górze najlepsze dane
             self.ready.to_csv(f"{path}{os.path.sep}adf.csv", index=False, encoding="cp1250", sep=";")
             self.dlg.load_adf(self.ready)
         elif self.a_b == "B":  # Zbiór danych B
@@ -622,3 +623,18 @@ class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS):  # type: ignore
             for key, value in dicts.items():
                 if key == 'param' and value == val:
                     return dicts['df_in'][['WARTOŚĆ', 'ILOŚĆ']]
+
+    def adf_sorting(self):
+        """Ostateczne posortowanie zbioru A w zależności od kompletności i wiarygodności danych."""
+        adf = self.ready
+        adf['Z_1'] = adf['Z'].apply(lambda x: 2 if pd.notna(x) else 0)
+        adf['H_1'] = adf['H'].apply(lambda x: 2 if pd.notna(x) else 0)
+        adf['R_1'] = adf['ROK'].apply(lambda x: 1 if pd.notna(x) else 0)
+        adf['S_1'] = adf['SKAN'].apply(lambda x: 1 if x == True else 0)
+        adf['T_1'] = adf['TRANS'].apply(lambda x: 1 if x == True else 0)
+        adf['SUM_P'] = adf.iloc[:,9:12].sum(axis=1)
+        adf['SUM_B'] = adf.iloc[:,12:14].sum(axis=1)
+        adf = adf.sort_values(by=['SUM_B', 'SUM_P'], ascending=[False, False]).reset_index(drop=True)
+        # adf.to_csv(f"D:/adf.csv", index=False, encoding="cp1250", sep=";")
+        adf = adf.iloc[:,:9]
+        return adf
