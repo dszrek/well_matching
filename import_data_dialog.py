@@ -19,9 +19,12 @@ class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS):  # type: ignore
     bmode_changed = pyqtSignal(bool)
     done_changed = pyqtSignal(bool)
 
-    def __init__(self, df, parent=None):
+    def __init__(self, df, a_b, dlg, parent=None):
         super(ImportDataDialog, self).__init__(parent)
         self.setupUi(self)
+        self.dlg = dlg  # Referencja do interface'u dockwidget'a
+        self.a_b = a_b  # Oznaczenie, który zbiór danych (A lub B)
+        self.setWindowTitle(f"Import danych z bazy {self.a_b}" )
         # Utalenie ilości i nazw kolumn dla głównego dataframe'a:
         self.p_cnt = len(df.columns) - 4
         cols = ['ID', 'NAZWA', 'X', 'Y', 'Z', 'H', 'ROK', 'SKAN', 'TRANS']
@@ -43,7 +46,6 @@ class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS):  # type: ignore
         # Podpięcie sygnałów zmiany indeksu zaznaczonego wiersza w tableview:
         self.tv_idx_in.selectionModel().selectionChanged.connect(lambda: self.show_index_records(self.tv_idx_in, self.df_in, self.mdl_in))
         self.tv_idx_out.selectionModel().selectionChanged.connect(lambda: self.show_index_records(self.tv_idx_out, self.df_out, self.mdl_out))
-
 
         # Konfiguracja przycisku OK:
         self.btn_ok = self.btnbx.button(QDialogButtonBox.Ok)
@@ -546,7 +548,6 @@ class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS):  # type: ignore
         df = df[df[self.param] == value].reset_index(drop=True)
         self.df_mdl.setDataFrame(df)
 
-
     def btn_conn(self):
         """Podłączenie funkcji do przycisków."""
         # Filtry:
@@ -594,4 +595,30 @@ class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS):  # type: ignore
         self.light.setStyleSheet(led_green) if self.done else self.light.setStyleSheet(led_red)
 
     def data_export(self):
-        print("end")
+        """Zapis danych na dysku i ich załadowanie do dockwidget'a."""
+        path = self.dlg.lab_path_content.text()
+        if self.a_b == "A":  # Zbiór danych A
+            self.ready.to_csv(f"{path}{os.path.sep}adf.csv", index=False, encoding="windows 1250", sep=";")
+            self.dlg.load_adf(self.ready)
+        elif self.a_b == "B":  # Zbiór danych B
+            name_dfs = {'Z' : 'zdf', 'H' : 'hdf', 'ROK' : 'rdf'}
+            in_params = ['Z', 'H', 'ROK']
+            in_params.remove(self.param)
+            exp_dfs = []
+            for p in in_params:
+                exp_dfs.append([p, self.df_pick(p)])
+            exp_dfs.append([self.param, self.df_in[['WARTOŚĆ', 'ILOŚĆ']]])
+            for df in exp_dfs:
+                for key, value in name_dfs.items():
+                    if df[0] == key:
+                        df[1].to_csv(f"{path}{os.path.sep}{value}.csv", index=False, encoding="windows 1250", sep=";")
+            self.dlg.load_idf(exp_dfs)
+            self.ready.to_csv(f"{path}{os.path.sep}bdf.csv", index=False, encoding="windows 1250", sep=";")
+            self.dlg.load_bdf(self.ready)
+
+    def df_pick(self, val):
+        """Zwraca dataframe 'self.[param]_in' po podaniu parametru."""
+        for dicts in self.params:
+            for key, value in dicts.items():
+                if key == 'param' and value == val:
+                    return dicts['df_in'][['WARTOŚĆ', 'ILOŚĆ']]

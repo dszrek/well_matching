@@ -23,9 +23,12 @@
 """
 
 import os
+import pandas as pd
 
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal
+
+from.classes import DataFrameModel
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'well_matching_dockwidget_base.ui'))
@@ -42,6 +45,35 @@ class WellMatchingDockWidget(QtWidgets.QDockWidget, FORM_CLASS):  # type: ignore
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+        self.adf = pd.DataFrame()
+        self.bdf = pd.DataFrame()
+        self.zdf = pd.DataFrame()
+        self.hdf = pd.DataFrame()
+        self.rdf = pd.DataFrame()
+
+    def col_cut(self, df):
+        """Zwraca dataframe bez kolumn X i Y."""
+        return pd.concat(objs=[df.iloc[:,:2], df.iloc[:,4:7]], axis=1)
+
+    def load_adf(self, df):
+        """Załadowanie adf po imporcie danych A."""
+        self.adf = df
+        tv_adf_widths = [100, 270, 50, 50, 50]
+        self.adf_mdl = DataFrameModel(df=self.col_cut(self.adf), tv=self.tv_adf, col_widths=tv_adf_widths)
+
+    def load_bdf(self, df):
+        """Załadowanie adf po imporcie danych A."""
+        self.bdf = df
+
+    def load_idf(self, dfs):
+        """Załadowanie dataframe'ów indeksów po imporcie danych B."""
+        for d in dfs:
+            if d[0] == 'Z':
+                self.zdf = d[1]
+            elif d[0] == 'H':
+                self.hdf = d[1]
+            elif d[0] == 'ROK':
+                self.rdf = d[1]
 
     def closeEvent(self, event):
         self.closingPlugin.emit()

@@ -26,7 +26,7 @@ def new_project():
     global PATH_PRJ
     PATH_PRJ = file_dialog(is_folder=True)
     if os.path.isdir(PATH_PRJ):
-        dlg.l_path_content.setText(PATH_PRJ)
+        dlg.lab_path_content.setText(PATH_PRJ)
         dlg.btn_adf.setEnabled(True)
         dlg.btn_bdf.setEnabled(True)
 
@@ -39,7 +39,7 @@ def import_adf():
         return
     if a_csv is None:
         return
-    dlg.impdlg = ImportDataDialog(a_csv)
+    dlg.impdlg = ImportDataDialog(a_csv, 'A', dlg)
     dlg.impdlg.show()
 
 def import_bdf():
@@ -51,7 +51,7 @@ def import_bdf():
         return
     if b_csv is None:
         return
-    dlg.impdlg = ImportDataDialog(b_csv)
+    dlg.impdlg = ImportDataDialog(b_csv, 'B', dlg)
     dlg.impdlg.show()
 
 def load_csv():
