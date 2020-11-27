@@ -60,10 +60,14 @@ class WellMatchingDockWidget(QtWidgets.QDockWidget, FORM_CLASS):  # type: ignore
         self.adf = df
         tv_adf_widths = [100, 270, 50, 50, 50]
         self.adf_mdl = DataFrameModel(df=self.col_cut(self.adf), tv=self.tv_adf, col_widths=tv_adf_widths)
+        self.btn_adf.setText("Baza A wczytana")
+        self.btn_adf.setEnabled(False)
 
     def load_bdf(self, df):
         """Załadowanie adf po imporcie danych A."""
         self.bdf = df
+        self.btn_bdf.setText("Baza B wczytana")
+        self.btn_bdf.setEnabled(False)
 
     def load_idf(self, dfs):
         """Załadowanie dataframe'ów indeksów po imporcie danych B."""

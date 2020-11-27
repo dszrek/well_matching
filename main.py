@@ -18,6 +18,7 @@ def dlg_main(_dlg):
     global dlg
     dlg = _dlg
     dlg.btn_new_prj.pressed.connect(new_project)
+    dlg.btn_open_prj.pressed.connect(open_project)
     dlg.btn_adf.pressed.connect(import_adf)
     dlg.btn_bdf.pressed.connect(import_bdf)
 
@@ -27,8 +28,41 @@ def new_project():
     PATH_PRJ = file_dialog(is_folder=True)
     if os.path.isdir(PATH_PRJ):
         dlg.lab_path_content.setText(PATH_PRJ)
-        dlg.btn_adf.setEnabled(True)
-        dlg.btn_bdf.setEnabled(True)
+        btn_reset()
+
+def open_project():
+    """Załadowanie zapisanego projektu. Uruchamia się po naciśnięciu btn_open_prj."""
+    global PATH_PRJ, dlg
+    btn_reset()
+    PATH_PRJ = file_dialog(is_folder=True)
+    if not os.path.isdir(PATH_PRJ):
+        return
+    dlg.lab_path_content.setText(PATH_PRJ)
+    # Próba wczytania zbioru danych A:
+    f_path = f"{PATH_PRJ}{os.path.sep}adf.csv"
+    f_path = f_path.replace("\\", "/")
+    if os.path.isfile(f_path):
+        dlg.load_adf(load_csv(f_path))
+    # Próba wczytania zbioru danych B:
+    idfs = idfs_load()
+    if not idfs:  # Nie ma kompletu plików
+        return
+    f_path = f"{PATH_PRJ}{os.path.sep}bdf.csv"
+    dlg.load_bdf(load_csv(f_path))
+    dlg.load_idf(idfs)
+
+def idfs_load():
+    """Zwraca dataframe'y indeksów z bazy B. Pusty, jeśli nie ma kompletu plików."""
+    bdfs = [['bdf', 'bdf'], ['Z', 'zdf'], ['H', 'hdf'], ['ROK', 'rdf']]
+    imp_dfs = []
+    for df in bdfs:
+        f_path = f"{PATH_PRJ}{os.path.sep}{df[1]}.csv"
+        if not os.path.isfile(f_path):
+            return
+        else:
+            if df[0] != 'bdf':
+                imp_dfs.append([df[0], load_csv(f_path)])
+    return imp_dfs
 
 def import_adf():
     """Import .csv z danymi bazy A. Uruchamia się po naciśnięciu btn_adf."""
@@ -54,16 +88,16 @@ def import_bdf():
     dlg.impdlg = ImportDataDialog(b_csv, 'B', dlg)
     dlg.impdlg.show()
 
-def load_csv():
+def load_csv(df_path=None):
     """Załadowanie zawartości csv do pandas dataframe'u."""
-    df_path = file_dialog(dir=PATH_PRJ, fmt='csv')
+    if not df_path:
+        df_path = file_dialog(dir=PATH_PRJ, fmt='csv')
     try:
-        df = pd.read_csv(df_path, error_bad_lines=False, encoding="windows 1250", delimiter=";")
-    except:
-        print("Błąd wczytania pliku csv.")
+        df = pd.read_csv(df_path, error_bad_lines=False, encoding="cp1250", delimiter=";")
+    except Exception as error:
+        print(error)
         return
     return df
-
 
 def file_dialog(dir='', for_open=True, fmt='', is_folder=False):
     """Dialog z eksploratorem Windows. Otwieranie/tworzenie folderów i plików."""
@@ -94,3 +128,10 @@ def file_dialog(dir='', for_open=True, fmt='', is_folder=False):
         return path
     else:
         return ''
+
+def btn_reset():
+    """Resetuje stan przycisków importu baz."""
+    dlg.btn_adf.setEnabled(True)
+    dlg.btn_adf.setText("Importuj bazę A")
+    dlg.btn_bdf.setEnabled(True)
+    dlg.btn_bdf.setText("Importuj bazę B")

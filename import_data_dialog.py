@@ -598,7 +598,7 @@ class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS):  # type: ignore
         """Zapis danych na dysku i ich załadowanie do dockwidget'a."""
         path = self.dlg.lab_path_content.text()
         if self.a_b == "A":  # Zbiór danych A
-            self.ready.to_csv(f"{path}{os.path.sep}adf.csv", index=False, encoding="windows 1250", sep=";")
+            self.ready.to_csv(f"{path}{os.path.sep}adf.csv", index=False, encoding="cp1250", sep=";")
             self.dlg.load_adf(self.ready)
         elif self.a_b == "B":  # Zbiór danych B
             name_dfs = {'Z' : 'zdf', 'H' : 'hdf', 'ROK' : 'rdf'}
@@ -611,9 +611,9 @@ class ImportDataDialog(QtWidgets.QDialog, FORM_CLASS):  # type: ignore
             for df in exp_dfs:
                 for key, value in name_dfs.items():
                     if df[0] == key:
-                        df[1].to_csv(f"{path}{os.path.sep}{value}.csv", index=False, encoding="windows 1250", sep=";")
+                        df[1].to_csv(f"{path}{os.path.sep}{value}.csv", index=False, encoding="cp1250", sep=";")
             self.dlg.load_idf(exp_dfs)
-            self.ready.to_csv(f"{path}{os.path.sep}bdf.csv", index=False, encoding="windows 1250", sep=";")
+            self.ready.to_csv(f"{path}{os.path.sep}bdf.csv", index=False, encoding="cp1250", sep=";")
             self.dlg.load_bdf(self.ready)
 
     def df_pick(self, val):
