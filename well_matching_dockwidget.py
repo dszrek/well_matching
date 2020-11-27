@@ -45,11 +45,35 @@ class WellMatchingDockWidget(QtWidgets.QDockWidget, FORM_CLASS):  # type: ignore
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+        # Dataframe'y:
         self.adf = pd.DataFrame()
         self.bdf = pd.DataFrame()
         self.zdf = pd.DataFrame()
         self.hdf = pd.DataFrame()
         self.rdf = pd.DataFrame()
+        # Parametry:
+        self.a_x = float()
+        self.a_y = float()
+        self.a_z = float()
+        self.a_h = float()
+        self.a_r = int()
+
+    def adf_row_select(self, _tv, _df):
+        """Zaznaczenie wiersza w tableview z adf."""
+        sel_tv = _tv.selectionModel()
+        index = sel_tv.currentIndex()
+        a_id = index.sibling(index.row(), 0).data()
+        a_name = index.sibling(index.row(), 1).data()
+        self.a_z = index.sibling(index.row(), 2).data()
+        self.a_h = index.sibling(index.row(), 3).data()
+        self.a_r = index.sibling(index.row(), 4).data()
+        self.lab_a_id.setText(str(a_id))
+        self.lab_a_name.setText(str(a_name))
+        self.lab_a_z.setText(str(self.a_z))
+        self.lab_a_h.setText(str(self.a_h))
+        self.lab_a_r.setText(str(self.a_r))
+        self.a_x = self.adf[self.adf['ID'] == a_id]['X'].values[0]
+        self.a_y = self.adf[self.adf['ID'] == a_id]['Y'].values[0]
 
     def col_cut(self, df):
         """Zwraca dataframe bez kolumn X i Y."""
@@ -58,14 +82,20 @@ class WellMatchingDockWidget(QtWidgets.QDockWidget, FORM_CLASS):  # type: ignore
     def load_adf(self, df):
         """Załadowanie adf po imporcie danych A."""
         self.adf = df
+        self.adf['ROK'] = self.adf['ROK'].astype('Int64')
         tv_adf_widths = [100, 270, 50, 50, 50]
         self.adf_mdl = DataFrameModel(df=self.col_cut(self.adf), tv=self.tv_adf, col_widths=tv_adf_widths)
+        self.tv_adf.selectionModel().selectionChanged.connect(lambda: self.adf_row_select(self.tv_adf, self.adf))
+        self.lab_all_cnt.setText(str(len(self.adf.index)))
         self.btn_adf.setText("Baza A wczytana")
         self.btn_adf.setEnabled(False)
 
     def load_bdf(self, df):
         """Załadowanie adf po imporcie danych A."""
         self.bdf = df
+        self.bdf['ROK'] = self.bdf['ROK'].astype('Int64')
+        tv_bdf_widths = [100, 270, 50, 50, 50]
+        self.bdf_mdl = DataFrameModel(df=self.col_cut(self.bdf), tv=self.tv_bdf, col_widths=tv_bdf_widths)
         self.btn_bdf.setText("Baza B wczytana")
         self.btn_bdf.setEnabled(False)
 
